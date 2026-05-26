@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Ailo Notulen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Serif+Display&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css"/>
+<link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════
+  AUTH SCREENS
+═══════════════════════════════════════ -->
+<div id="authWrap" class="auth-wrap">
+
+  <!-- Login -->
+  <div id="screenLogin" class="auth-screen active">
+    <div class="auth-card">
+      <div class="auth-brand">
+        <img src="/logo.png" alt="Ailo" class="auth-logo"/>
+        <div><div class="auth-brand-name">Ailo Notulen</div><div class="auth-brand-sub">Telkom University's Center of Excellence</div></div>
+      </div>
+      <div class="auth-divider"></div>
+      <h2 class="auth-heading">Masuk ke akun Anda</h2>
+      <div id="loginErr" class="auth-alert auth-alert-error" style="display:none;"></div>
+      <div class="field">
+        <label class="flabel">Email</label>
+        <div class="inp-icon">
+          <i class="ti ti-mail"></i>
+          <input class="finput" id="loginEmail" type="email" placeholder="email@contoh.com" autocomplete="email" onkeydown="if(event.key==='Enter')doLogin()"/>
+        </div>
+      </div>
+      <div class="field">
+        <label class="flabel">Password</label>
+        <div class="inp-icon">
+          <i class="ti ti-lock"></i>
+          <input class="finput" id="loginPw" type="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/>
+          <i class="ti ti-eye inp-eye" onclick="togglePw('loginPw',this)"></i>
+        </div>
+      </div>
+      <div style="text-align:right;margin-top:-6px;">
+        <span class="auth-link" onclick="showScreen('screenForgot')">Lupa password?</span>
+      </div>
+      <button class="auth-btn" id="loginBtn" onclick="doLogin()"><i class="ti ti-login"></i> Masuk</button>
+      <p class="auth-switch">Belum punya akun? <span class="auth-link" onclick="showScreen('screenRegister')">Daftar sekarang</span></p>
+    </div>
+  </div>
+
+  <!-- Register -->
+  <div id="screenRegister" class="auth-screen">
+    <div class="auth-card">
+      <div class="auth-brand">
+        <img src="/logo.png" alt="Ailo" class="auth-logo"/>
+        <div><div class="auth-brand-name">Ailo Notulen</div><div class="auth-brand-sub">Buat akun baru</div></div>
+      </div>
+      <div class="auth-divider"></div>
+      <h2 class="auth-heading">Daftar akun</h2>
+      <div id="registerErr" class="auth-alert auth-alert-error" style="display:none;"></div>
+      <div id="registerOk" class="auth-alert auth-alert-success" style="display:none;"></div>
+      <div class="field">
+        <label class="flabel">Nama lengkap</label>
+        <div class="inp-icon"><i class="ti ti-user"></i><input class="finput" id="regNama" type="text" placeholder="Nama Anda" autocomplete="name"/></div>
+      </div>
+      <div class="field">
+        <label class="flabel">Email</label>
+        <div class="inp-icon"><i class="ti ti-mail"></i><input class="finput" id="regEmail" type="email" placeholder="email@contoh.com" autocomplete="email"/></div>
+      </div>
+      <div class="field">
+        <label class="flabel">Password</label>
+        <div class="inp-icon">
+          <i class="ti ti-lock"></i>
+          <input class="finput" id="regPw" type="password" placeholder="Min. 6 karakter"/>
+          <i class="ti ti-eye inp-eye" onclick="togglePw('regPw',this)"></i>
+        </div>
+      </div>
+      <div class="field">
+        <label class="flabel">Konfirmasi password</label>
+        <div class="inp-icon">
+          <i class="ti ti-lock-check"></i>
+          <input class="finput" id="regPw2" type="password" placeholder="Ulangi password" onkeydown="if(event.key==='Enter')doRegister()"/>
+        </div>
+      </div>
+      <button class="auth-btn" id="registerBtn" onclick="doRegister()"><i class="ti ti-user-plus"></i> Daftar</button>
+      <p class="auth-switch">Sudah punya akun? <span class="auth-link" onclick="showScreen('screenLogin')">Masuk di sini</span></p>
+    </div>
+  </div>
+
+  <!-- Forgot Password -->
+  <div id="screenForgot" class="auth-screen">
+    <div class="auth-card">
+      <div class="auth-brand">
+        <img src="/logo.png" alt="Ailo" class="auth-logo"/>
+        <div><div class="auth-brand-name">Ailo Notulen</div><div class="auth-brand-sub">Reset password</div></div>
+      </div>
+      <div class="auth-divider"></div>
+      <h2 class="auth-heading">Lupa password?</h2>
+      <p style="font-size:13px;color:var(--text-3);margin-bottom:4px;">Masukkan email Anda dan kami akan mengirimkan link untuk mereset password.</p>
+      <div id="forgotErr" class="auth-alert auth-alert-error" style="display:none;"></div>
+      <div id="forgotOk" class="auth-alert auth-alert-success" style="display:none;"></div>
+      <div class="field">
+        <label class="flabel">Email terdaftar</label>
+        <div class="inp-icon"><i class="ti ti-mail"></i><input class="finput" id="forgotEmail" type="email" placeholder="email@contoh.com" onkeydown="if(event.key==='Enter')doForgot()"/></div>
+      </div>
+      <button class="auth-btn" id="forgotBtn" onclick="doForgot()"><i class="ti ti-send"></i> Kirim Link Reset</button>
+      <p class="auth-switch"><span class="auth-link" onclick="showScreen('screenLogin')"><i class="ti ti-arrow-left" style="font-size:12px;"></i> Kembali ke login</span></p>
+    </div>
+  </div>
+
+  <!-- Reset Password -->
+  <div id="screenReset" class="auth-screen">
+    <div class="auth-card">
+      <div class="auth-brand">
+        <img src="/logo.png" alt="Ailo" class="auth-logo"/>
+        <div><div class="auth-brand-name">Ailo Notulen</div><div class="auth-brand-sub">Buat password baru</div></div>
+      </div>
+      <div class="auth-divider"></div>
+      <h2 class="auth-heading">Buat password baru</h2>
+      <div id="resetErr" class="auth-alert auth-alert-error" style="display:none;"></div>
+      <div id="resetOk" class="auth-alert auth-alert-success" style="display:none;"></div>
+      <div class="field">
+        <label class="flabel">Password baru</label>
+        <div class="inp-icon">
+          <i class="ti ti-lock"></i>
+          <input class="finput" id="resetPw" type="password" placeholder="Min. 6 karakter"/>
+          <i class="ti ti-eye inp-eye" onclick="togglePw('resetPw',this)"></i>
+        </div>
+      </div>
+      <div class="field">
+        <label class="flabel">Konfirmasi password</label>
+        <div class="inp-icon">
+          <i class="ti ti-lock-check"></i>
+          <input class="finput" id="resetPw2" type="password" placeholder="Ulangi password baru" onkeydown="if(event.key==='Enter')doResetPw()"/>
+        </div>
+      </div>
+      <button class="auth-btn" id="resetBtn" onclick="doResetPw()"><i class="ti ti-check"></i> Simpan Password Baru</button>
+      <p class="auth-switch"><span class="auth-link" onclick="showScreen('screenLogin')"><i class="ti ti-arrow-left" style="font-size:12px;"></i> Kembali ke login</span></p>
+    </div>
+  </div>
+
+</div><!-- /authWrap -->
+
+
+<!-- ═══════════════════════════════════════
+  APP SHELL
+═══════════════════════════════════════ -->
+<div id="appShell" class="shell" style="display:none;">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-inner">
+      <div class="sidebar-logo">
+        <img src="/logo.png" alt="Ailo" class="logo-img"/>
+        <span class="logo-name">Notulen</span>
+      </div>
+      <nav class="sidebar-nav" id="sidebarNav"></nav>
+      <div class="sidebar-user" onclick="showPage('profil')" style="cursor:pointer;" title="My Profile">
+        <div class="user-av" id="userAv">A</div>
+        <div class="user-info">
+          <div class="user-name" id="userDisplayName">—</div>
+          <div class="user-role-badge" id="userRoleBadge">—</div>
+        </div>
+        <i class="ti ti-chevron-right" style="color:var(--text-3);font-size:15px;flex-shrink:0;"></i>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <header class="topbar">
+      <button class="toggle-btn" id="toggleBtn" onclick="toggleSidebar()"><i class="ti ti-layout-sidebar" id="toggleIcon"></i></button>
+      <div class="topbar-brand">
+        <img src="/logo.png" alt="Ailo" class="topbar-logo-img"/>
+        <div class="topbar-title">Ailo Notulen</div>
+      </div>
+      <span class="topbar-meta" id="topbarMeta"></span>
+      <div class="topbar-actions" id="topbarActions"></div>
+    </header>
+
+    <div class="body-wrap">
+
+      <!-- ── BUAT NOTULEN ── -->
+      <div id="pageBuat" class="page">
+        <div class="form-scroll" id="formScroll">
+          <div id="readonlyBanner" class="readonly-banner" style="display:none;">
+            <i class="ti ti-eye" style="font-size:15px;"></i>
+            Anda masuk sebagai <strong>Executive</strong> — hanya dapat melihat notulen.
+          </div>
+
+          <div class="card">
+            <div class="card-head"><div class="card-head-left"><i class="ti ti-info-circle"></i><span>Informasi rapat</span></div></div>
+            <div class="card-body">
+              <div class="field"><label class="flabel">Judul rapat *</label><input class="finput" id="fJudul" type="text" placeholder="Rapat Koordinasi Proyek Q2 2026"/></div>
+              <div class="field-grid">
+                <div class="field"><label class="flabel">Tanggal *</label><input class="finput" id="fTanggal" type="date"/></div>
+                <div class="field"><label class="flabel">Waktu mulai</label><input class="finput" id="fWaktuMulai" type="time"/></div>
+                <div class="field"><label class="flabel">Waktu selesai</label><input class="finput" id="fWaktuSelesai" type="time"/></div>
+                <div class="field"><label class="flabel">Lokasi / platform</label><input class="finput" id="fLokasi" type="text" placeholder="Ruang Rapat A / Google Meet"/></div>
+                <div class="field"><label class="flabel">Pemimpin rapat</label><input class="finput" id="fPemimpin" type="text" placeholder="Nama pemimpin"/></div>
+                <div class="field"><label class="flabel">Notulis</label><input class="finput" id="fNotulis" type="text" placeholder="Nama notulis"/></div>
+                <div class="field"><label class="flabel">Divisi / departemen</label><input class="finput" id="fDivisi" type="text" placeholder="Product & Engineering"/></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head"><div class="card-head-left"><i class="ti ti-users"></i><span>Daftar peserta</span></div></div>
+            <div class="card-body">
+              <div class="field"><label class="flabel">Peserta (pisahkan dengan koma)</label>
+                <textarea class="ftextarea" id="fPeserta" placeholder="Ahmad Rasyid (Pemimpin), Siti Rahayu, Budi Santoso, ..."></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head"><div class="card-head-left"><i class="ti ti-list-check"></i><span>Agenda pembahasan</span></div></div>
+            <div class="card-body">
+              <div class="agenda-list" id="agendaList"></div>
+              <div class="add-row" id="addAgendaBtn" onclick="addAgenda()"><i class="ti ti-plus"></i> Tambah agenda</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head"><div class="card-head-left"><i class="ti ti-bulb"></i><span>Poin keputusan & catatan</span></div></div>
+            <div class="card-body">
+              <div class="field"><label class="flabel">Keputusan yang disepakati</label>
+                <textarea class="ftextarea" id="fKeputusan" style="min-height:90px;" placeholder="• Keputusan pertama&#10;• Keputusan kedua"></textarea>
+              </div>
+              <div class="field"><label class="flabel">Catatan tambahan</label>
+                <textarea class="ftextarea" id="fCatatan" placeholder="Catatan lain..."></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head">
+              <div class="card-head-left"><i class="ti ti-checkbox"></i><span>Tindak lanjut (action items)</span></div>
+              <span class="card-meta" id="actionMeta">0 item</span>
+            </div>
+            <div class="card-body" style="padding:0;">
+              <div class="action-table-wrap"><table class="action-table">
+                <thead><tr><th>Tugas</th><th>PIC</th><th>Tenggat</th><th>Status</th><th></th></tr></thead>
+                <tbody id="actionBody"></tbody>
+              </table></div>
+              <div style="padding:10px 18px;">
+                <div class="add-row" id="addActionBtn" onclick="addAction()"><i class="ti ti-plus"></i> Tambah action item</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT PANEL -->
+        <aside class="right-panel" id="rightPanel">
+          <div class="rpanel-section">
+            <div class="rpanel-head">
+              <div class="rpanel-head-left"><i class="ti ti-send"></i> Penerima</div>
+              <span class="rcount" id="rcount">0</span>
+            </div>
+            <div class="recipient-list" id="recipientList"></div>
+            <div class="add-recipient" id="addRecipientBtn" onclick="openAddRecipient()">
+              <i class="ti ti-user-plus"></i> Tambah penerima
+            </div>
+          </div>
+          <div class="email-preview">
+            <div class="preview-label">Preview email</div>
+            <div class="email-card">
+              <div class="email-subject" id="epSubject">—</div>
+              <div class="email-to" id="epTo">Kepada: 0 penerima</div>
+              <div class="email-body">Yth. Tim,<br><br>Berikut notulen rapat yang telah diselenggarakan.<br><br>Mohon ditindaklanjuti.<br><br>Salam,<br><strong id="epPengirim">—</strong></div>
+            </div>
+          </div>
+          <div class="send-section" id="sendSection">
+            <div class="send-opt"><input type="checkbox" id="chkCc"/><label for="chkCc">CC ke pemimpin rapat</label></div>
+            <button class="send-btn" id="sendBtn" onclick="kirimNotulen()">
+              <i class="ti ti-send"></i><span id="sendBtnText">Kirim ke 0 penerima</span>
+            </button>
+          </div>
+        </aside>
+      </div>
+
+      <!-- ── RIWAYAT ── -->
+      <div id="pageRiwayat" class="page">
+        <div class="page-content">
+          <div class="page-header">
+            <h2>Riwayat Notulen</h2>
+            <button class="tbtn tbtn-primary" id="btnBuatBaru" onclick="showPage('buat')"><i class="ti ti-plus"></i><span class="btn-text"> Buat Baru</span></button>
+          </div>
+          <div class="search-bar"><i class="ti ti-search"></i><input type="text" id="searchRiwayat" placeholder="Cari notulen..." oninput="filterRiwayat()"/></div>
+          <div id="riwayatList" class="riwayat-grid"></div>
+        </div>
+      </div>
+
+      <!-- ── KONTAK ── -->
+      <div id="pageKontak" class="page">
+        <div class="page-content">
+          <div class="page-header">
+            <h2>Daftar Kontak</h2>
+            <button class="tbtn tbtn-primary" onclick="openContactModal()"><i class="ti ti-user-plus"></i><span class="btn-text"> Tambah</span></button>
+          </div>
+          <div class="search-bar"><i class="ti ti-search"></i><input type="text" id="searchKontak" placeholder="Cari kontak..." oninput="filterKontak()"/></div>
+          <div id="kontakList" class="kontak-grid"></div>
+        </div>
+      </div>
+
+      <!-- ── KELOLA PENGGUNA (admin) ── -->
+      <div id="pagePengguna" class="page">
+        <div class="page-content">
+          <div class="page-header">
+            <h2>Kelola Pengguna</h2>
+            <button class="tbtn tbtn-primary" onclick="openUserModal()"><i class="ti ti-user-plus"></i><span class="btn-text"> Tambah</span></button>
+          </div>
+          <div class="pengguna-table-wrap">
+            <table class="pengguna-table">
+              <thead><tr><th>Nama</th><th>Email</th><th>Role</th><th>Jabatan / Divisi</th><th>Status</th><th>Login terakhir</th><th></th></tr></thead>
+              <tbody id="penggunaBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── MY PROFILE ── -->
+      <div id="pageProfil" class="page">
+        <div class="page-content" style="max-width:600px;margin:0 auto;">
+
+          <!-- Profile header card -->
+          <div class="profile-hero">
+            <div class="profile-av-big" id="profileAvBig">A</div>
+            <div class="profile-hero-info">
+              <div class="profile-hero-name" id="profileHeroName">—</div>
+              <div class="profile-hero-meta" id="profileHeroMeta">—</div>
+              <div id="profileHeroBadge"></div>
+            </div>
+          </div>
+
+          <!-- Profil -->
+          <div class="card">
+            <div class="card-head"><div class="card-head-left"><i class="ti ti-id-badge"></i><span>Profil</span></div></div>
+            <div class="card-body">
+              <div class="field-grid">
+                <div class="field"><label class="flabel">Nama lengkap</label><input class="finput" id="pNama" type="text" placeholder="Nama Anda"/></div>
+                <div class="field"><label class="flabel">Jabatan</label><input class="finput" id="pJabatan" type="text" placeholder="Jabatan Anda"/></div>
+                <div class="field"><label class="flabel">Divisi</label><input class="finput" id="pDivisi" type="text" placeholder="Divisi"/></div>
+                <div class="field" style="grid-column:1/-1;"><label class="flabel">Bio</label><textarea class="ftextarea" id="pBio" placeholder="Tulis sedikit tentang Anda..." style="min-height:60px;"></textarea></div>
+              </div>
+              <button class="tbtn tbtn-primary" style="align-self:flex-start;" onclick="simpanProfil()"><i class="ti ti-check"></i> Simpan Profil</button>
+            </div>
+          </div>
+
+          <!-- Pengaturan akun -->
+          <div class="card">
+            <div class="card-head"><div class="card-head-left"><i class="ti ti-settings"></i><span>Pengaturan Akun</span></div></div>
+            <div class="card-body">
+
+              <!-- Edit email -->
+              <div class="settings-section">
+                <div class="settings-section-head" onclick="toggleSettingsSection('sectionEmail')">
+                  <div style="display:flex;align-items:center;gap:8px;"><i class="ti ti-mail" style="color:var(--teal-500);font-size:16px;"></i><span style="font-size:13px;font-weight:500;">Ubah Email</span></div>
+                  <i class="ti ti-chevron-down settings-chevron" id="chevronEmail"></i>
+                </div>
+                <div class="settings-section-body" id="sectionEmail">
+                  <div class="field"><label class="flabel">Email saat ini</label><div class="finput-static" id="emailSaatIni">—</div></div>
+                  <div class="field"><label class="flabel">Email baru</label><input class="finput" id="emailBaru" type="email" placeholder="email-baru@contoh.com"/></div>
+                  <div class="field"><label class="flabel">Konfirmasi dengan password</label>
+                    <div class="inp-icon"><i class="ti ti-lock"></i><input class="finput" id="emailPw" type="password" placeholder="Password Anda"/><i class="ti ti-eye inp-eye" onclick="togglePw('emailPw',this)"></i></div>
+                  </div>
+                  <button class="tbtn tbtn-primary" style="align-self:flex-start;" onclick="ubahEmail()"><i class="ti ti-check"></i> Perbarui Email</button>
+                </div>
+              </div>
+
+              <!-- Ubah password -->
+              <div class="settings-section">
+                <div class="settings-section-head" onclick="toggleSettingsSection('sectionPw')">
+                  <div style="display:flex;align-items:center;gap:8px;"><i class="ti ti-lock" style="color:var(--teal-500);font-size:16px;"></i><span style="font-size:13px;font-weight:500;">Ubah Password</span></div>
+                  <i class="ti ti-chevron-down settings-chevron" id="chevronPw"></i>
+                </div>
+                <div class="settings-section-body" id="sectionPw">
+                  <div class="field"><label class="flabel">Password saat ini</label>
+                    <div class="inp-icon"><i class="ti ti-lock"></i><input class="finput" id="pwLama" type="password" placeholder="Password saat ini"/><i class="ti ti-eye inp-eye" onclick="togglePw('pwLama',this)"></i></div>
+                  </div>
+                  <div class="field"><label class="flabel">Password baru</label>
+                    <div class="inp-icon"><i class="ti ti-lock-check"></i><input class="finput" id="pwBaru" type="password" placeholder="Min. 6 karakter"/><i class="ti ti-eye inp-eye" onclick="togglePw('pwBaru',this)"></i></div>
+                  </div>
+                  <div class="field"><label class="flabel">Konfirmasi password baru</label>
+                    <div class="inp-icon"><i class="ti ti-lock-check"></i><input class="finput" id="pwKonfirmasi" type="password" placeholder="Ulangi password baru"/></div>
+                  </div>
+                  <button class="tbtn tbtn-primary" style="align-self:flex-start;" onclick="ubahPassword()"><i class="ti ti-check"></i> Simpan Password</button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Logout -->
+          <div class="card logout-card" onclick="confirmLogout()">
+            <div style="display:flex;align-items:center;gap:12px;padding:16px 20px;">
+              <div class="logout-icon-wrap"><i class="ti ti-logout"></i></div>
+              <div style="flex:1;">
+                <div style="font-size:14px;font-weight:600;color:#C0392B;">Keluar dari akun</div>
+                <div style="font-size:12px;color:var(--text-3);margin-top:2px;">Sesi Anda akan diakhiri</div>
+              </div>
+              <i class="ti ti-chevron-right" style="color:var(--text-3);font-size:16px;"></i>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div><!-- /body-wrap -->
+  </div><!-- /main -->
+</div><!-- /appShell -->
+
+
+<!-- ═══════════════════════════════════════
+  MODALS
+═══════════════════════════════════════ -->
+
+<!-- Tambah Penerima -->
+<div class="modal-overlay" id="modalRecipient">
+  <div class="modal">
+    <div class="modal-head"><span>Tambah Penerima</span><i class="ti ti-x modal-close" onclick="closeModal('modalRecipient')"></i></div>
+    <div class="modal-body">
+      <div class="search-bar" style="margin-bottom:10px;"><i class="ti ti-search"></i><input type="text" id="searchContactModal" placeholder="Cari dari kontak..." oninput="searchContactsModal()"/></div>
+      <div id="contactResults" class="contact-results"></div>
+      <div class="modal-divider">atau tambah manual</div>
+      <div class="field-grid">
+        <div class="field"><label class="flabel">Nama</label><input class="finput" id="newRcpNama" placeholder="Nama"/></div>
+        <div class="field"><label class="flabel">Email</label><input class="finput" id="newRcpEmail" type="email" placeholder="email@contoh.com"/></div>
+      </div>
+      <button class="tbtn tbtn-primary" style="width:100%;justify-content:center;" onclick="addRecipientManual()"><i class="ti ti-plus"></i> Tambahkan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Tambah / Edit Kontak -->
+<div class="modal-overlay" id="modalContact">
+  <div class="modal">
+    <div class="modal-head"><span id="modalContactTitle">Tambah Kontak</span><i class="ti ti-x modal-close" onclick="closeModal('modalContact')"></i></div>
+    <div class="modal-body">
+      <input type="hidden" id="editContactId"/>
+      <div class="field-grid">
+        <div class="field"><label class="flabel">Nama *</label><input class="finput" id="cNama" placeholder="Nama lengkap"/></div>
+        <div class="field"><label class="flabel">Email *</label><input class="finput" id="cEmail" type="email" placeholder="email@contoh.com"/></div>
+        <div class="field"><label class="flabel">Jabatan</label><input class="finput" id="cJabatan" placeholder="Jabatan"/></div>
+        <div class="field"><label class="flabel">Divisi</label><input class="finput" id="cDivisiField" placeholder="Divisi"/></div>
+      </div>
+      <button class="tbtn tbtn-primary" style="width:100%;justify-content:center;" onclick="saveContact()"><i class="ti ti-check"></i> Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Tambah / Edit Pengguna -->
+<div class="modal-overlay" id="modalUser">
+  <div class="modal">
+    <div class="modal-head"><span id="modalUserTitle">Tambah Pengguna</span><i class="ti ti-x modal-close" onclick="closeModal('modalUser')"></i></div>
+    <div class="modal-body">
+      <input type="hidden" id="editUserId"/>
+      <div class="field-grid">
+        <div class="field"><label class="flabel">Nama *</label><input class="finput" id="uNama" placeholder="Nama lengkap"/></div>
+        <div class="field"><label class="flabel">Email *</label><input class="finput" id="uEmail" type="email" placeholder="email@contoh.com"/></div>
+        <div class="field"><label class="flabel">Role *</label>
+          <select class="fselect" id="uRole">
+            <option value="user">User</option>
+            <option value="executive">Executive</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+        <div class="field"><label class="flabel">Jabatan</label><input class="finput" id="uJabatan" placeholder="Jabatan"/></div>
+        <div class="field"><label class="flabel">Divisi</label><input class="finput" id="uDivisi" placeholder="Divisi"/></div>
+        <div class="field"><label class="flabel" id="uPwLabel">Password *</label>
+          <div class="inp-icon"><i class="ti ti-lock"></i><input class="finput" id="uPassword" type="password" placeholder="Min. 6 karakter"/><i class="ti ti-eye inp-eye" onclick="togglePw('uPassword',this)"></i></div>
+        </div>
+      </div>
+      <div class="field" id="uAktifWrap">
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+          <input type="checkbox" id="uAktif" checked style="accent-color:var(--teal-500);width:15px;height:15px;"/>
+          Akun aktif
+        </label>
+      </div>
+      <button class="tbtn tbtn-primary" style="width:100%;justify-content:center;" onclick="saveUser()"><i class="ti ti-check"></i> Simpan</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════
+  CUSTOM ALERT / CONFIRM DIALOG
+═══════════════════════════════════════ -->
+<div class="dialog-overlay" id="dialogOverlay">
+  <div class="dialog" id="dialogBox">
+    <div class="dialog-icon-wrap" id="dialogIconWrap">
+      <i class="ti" id="dialogIcon"></i>
+    </div>
+    <div class="dialog-title" id="dialogTitle"></div>
+    <div class="dialog-message" id="dialogMessage"></div>
+    <div class="dialog-actions" id="dialogActions"></div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">
+  <i id="toastIcon" class="ti ti-check"></i>
+  <span id="toastMsg">Berhasil</span>
+</div>
+
+<!-- Mobile FAB -->
+<button class="fab-send" id="fabSend" onclick="kirimNotulen()"><i class="ti ti-send"></i></button>
+
+<script src="js/app.js"></script>
+</body>
+</html>

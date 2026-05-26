@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Notulen Rapat</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --purple-50: #EEEDFE;
+    --purple-200: #AFA9EC;
+    --purple-500: #534AB7;
+    --purple-700: #3C3489;
+    --purple-900: #26215C;
+    --teal-50: #E1F5EE;
+    --teal-600: #0F6E56;
+    --coral-50: #FAECE7;
+    --coral-600: #993C1D;
+    --amber-50: #FAEEDA;
+    --amber-700: #854F0B;
+    --green-50: #EAF3DE;
+    --green-700: #3B6D11;
+    --pink-50: #FBEAF0;
+    --pink-700: #72243E;
+    --blue-50: #E6F1FB;
+    --blue-700: #0C447C;
+    --bg: #F5F4F0;
+    --surface: #FFFFFF;
+    --surface2: #F9F8F6;
+    --border: rgba(0,0,0,0.08);
+    --border-md: rgba(0,0,0,0.13);
+    --text: #1A1A1A;
+    --text-2: #555550;
+    --text-3: #999890;
+    --sidebar-w: 220px;
+    --topbar-h: 56px;
+    --transition: 0.28s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  html, body { height: 100%; background: var(--bg); font-family: 'DM Sans', sans-serif; color: var(--text); font-size: 14px; }
+
+  /* ── Layout shell ── */
+  .shell { display: flex; height: 100vh; overflow: hidden; }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    width: var(--sidebar-w);
+    flex-shrink: 0;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    transition: width var(--transition), opacity var(--transition), transform var(--transition);
+    overflow: hidden;
+    position: relative;
+    z-index: 10;
+  }
+  .sidebar.hidden {
+    width: 0;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .sidebar-inner { width: var(--sidebar-w); min-width: var(--sidebar-w); display: flex; flex-direction: column; height: 100%; }
+
+  .sidebar-logo {
+    padding: 20px 18px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .logo-mark {
+    width: 32px; height: 32px;
+    background: var(--purple-500);
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .logo-mark i { color: #fff; font-size: 17px; }
+  .logo-name { font-family: 'DM Serif Display', serif; font-size: 16px; color: var(--text); letter-spacing: -0.02em; }
+
+  .sidebar-nav { flex: 1; padding: 12px 10px; display: flex; flex-direction: column; gap: 2px; }
+  .nav-label { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; color: var(--text-3); text-transform: uppercase; padding: 10px 8px 4px; }
+
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    font-size: 13px; font-weight: 400;
+    color: var(--text-2);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    white-space: nowrap;
+    user-select: none;
+  }
+  .nav-item i { font-size: 17px; flex-shrink: 0; }
+  .nav-item:hover { background: var(--bg); color: var(--text); }
+  .nav-item.active { background: var(--purple-50); color: var(--purple-500); font-weight: 500; }
+  .nav-item .nav-badge {
+    margin-left: auto;
+    background: var(--purple-50);
+    color: var(--purple-500);
+    font-size: 10px; font-weight: 600;
+    padding: 1px 7px; border-radius: 20px;
+  }
+
+  .sidebar-user {
+    padding: 12px 14px;
+    border-top: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .user-av { width: 30px; height: 30px; border-radius: 50%; background: var(--purple-50); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: var(--purple-700); flex-shrink: 0; }
+  .user-info { flex: 1; min-width: 0; }
+  .user-name { font-size: 12px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .user-role { font-size: 11px; color: var(--text-3); }
+
+  /* ── Main ── */
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+
+  /* ── Topbar ── */
+  .topbar {
+    height: var(--topbar-h);
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center;
+    padding: 0 20px;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+  .toggle-btn {
+    width: 32px; height: 32px;
+    border-radius: 7px;
+    border: 1px solid var(--border-md);
+    background: var(--surface);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; flex-shrink: 0;
+    transition: background 0.15s;
+    color: var(--text-2);
+  }
+  .toggle-btn:hover { background: var(--bg); }
+  .toggle-btn i { font-size: 18px; }
+
+  .topbar-title { font-family: 'DM Serif Display', serif; font-size: 16px; color: var(--text); letter-spacing: -0.02em; flex: 1; }
+  .topbar-meta { font-size: 12px; color: var(--text-3); white-space: nowrap; }
+
+  .topbar-actions { display: flex; gap: 8px; }
+  .tbtn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 14px;
+    border-radius: 7px;
+    font-size: 12px; font-weight: 500;
+    cursor: pointer;
+    border: 1px solid var(--border-md);
+    background: var(--surface);
+    color: var(--text-2);
+    font-family: 'DM Sans', sans-serif;
+    transition: background 0.15s;
+    white-space: nowrap;
+  }
+  .tbtn:hover { background: var(--bg); }
+  .tbtn i { font-size: 15px; }
+  .tbtn-primary { background: var(--purple-500); color: #fff; border-color: var(--purple-500); }
+  .tbtn-primary:hover { background: var(--purple-700); }
+
+  /* ── Body layout ── */
+  .body-wrap { flex: 1; display: flex; overflow: hidden; }
+
+  /* ── Form area ── */
+  .form-scroll { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+  .form-scroll::-webkit-scrollbar { width: 5px; }
+  .form-scroll::-webkit-scrollbar-thumb { background: var(--border-md); border-radius: 10px; }
+
+  /* ── Cards ── */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .card-head {
+    padding: 13px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .card-head-left { display: flex; align-items: center; gap: 8px; }
+  .card-head-left i { font-size: 16px; color: var(--purple-500); }
+  .card-head-left span { font-size: 13px; font-weight: 500; color: var(--text); }
+  .card-body { padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; }
+
+  /* ── Fields ── */
+  .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .field-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field-full { grid-column: 1 / -1; }
+  .flabel { font-size: 11px; font-weight: 500; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.06em; }
+  .finput, .fselect, .ftextarea {
+    font-size: 13px; font-family: 'DM Sans', sans-serif;
+    padding: 8px 11px;
+    border: 1px solid var(--border-md);
+    border-radius: 7px;
+    background: var(--surface2);
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .finput:focus, .fselect:focus, .ftextarea:focus { border-color: var(--purple-500); background: var(--surface); }
+  .ftextarea { resize: vertical; min-height: 72px; line-height: 1.6; }
+
+  /* ── Agenda list ── */
+  .agenda-list { display: flex; flex-direction: column; gap: 6px; }
+  .agenda-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+  .agenda-num {
+    width: 22px; height: 22px; flex-shrink: 0;
+    background: var(--purple-50); color: var(--purple-500);
+    border-radius: 50%; font-size: 11px; font-weight: 600;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .agenda-text { flex: 1; font-size: 13px; color: var(--text); }
+  .agenda-drag { color: var(--text-3); font-size: 15px; cursor: grab; }
+
+  /* ── Action items ── */
+  .action-table { width: 100%; border-collapse: collapse; }
+  .action-table th { font-size: 10px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-3); padding: 6px 10px; text-align: left; border-bottom: 1px solid var(--border); }
+  .action-table td { padding: 9px 10px; font-size: 13px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  .action-table tr:last-child td { border-bottom: none; }
+  .action-table tr:hover td { background: var(--surface2); }
+  .status-pill {
+    display: inline-flex; align-items: center;
+    font-size: 11px; font-weight: 500;
+    padding: 2px 9px; border-radius: 20px;
+  }
+  .pill-open { background: var(--amber-50); color: var(--amber-700); }
+  .pill-done { background: var(--green-50); color: var(--green-700); }
+  .pic-chip { font-size: 12px; font-weight: 500; color: var(--purple-500); }
+
+  /* ── Add row ── */
+  .add-row {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 12px; color: var(--text-3);
+    cursor: pointer; padding: 6px 2px;
+    transition: color 0.15s;
+  }
+  .add-row:hover { color: var(--purple-500); }
+  .add-row i { font-size: 15px; }
+
+  /* ── Right panel ── */
+  .right-panel {
+    width: 256px;
+    flex-shrink: 0;
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+
+  .rpanel-section { border-bottom: 1px solid var(--border); }
+  .rpanel-head { padding: 13px 16px; display: flex; align-items: center; justify-content: space-between; }
+  .rpanel-head-left { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 500; color: var(--text); }
+  .rpanel-head-left i { font-size: 15px; color: var(--purple-500); }
+  .rcount { font-size: 10px; font-weight: 600; background: var(--purple-50); color: var(--purple-500); padding: 1px 7px; border-radius: 20px; }
+
+  /* ── Recipients ── */
+  .recipient-list { padding: 4px 14px 12px; display: flex; flex-direction: column; gap: 8px; }
+  .ritem { display: flex; align-items: center; gap: 9px; }
+  .rav {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 600; flex-shrink: 0;
+  }
+  .rinfo { flex: 1; min-width: 0; }
+  .rname { font-size: 12px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .remail { font-size: 10px; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rremove { font-size: 14px; color: var(--text-3); cursor: pointer; flex-shrink: 0; transition: color 0.15s; }
+  .rremove:hover { color: #c0392b; }
+
+  .add-recipient {
+    margin: 0 12px 12px;
+    display: flex; align-items: center; gap: 6px;
+    padding: 7px 11px;
+    border: 1px dashed var(--border-md);
+    border-radius: 8px;
+    font-size: 12px; color: var(--text-3);
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .add-recipient:hover { border-color: var(--purple-200); color: var(--purple-500); }
+  .add-recipient i { font-size: 15px; }
+
+  /* ── Email preview ── */
+  .email-preview { padding: 14px; flex: 1; overflow-y: auto; }
+  .preview-label { font-size: 10px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-3); margin-bottom: 9px; }
+  .email-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 9px; padding: 12px 14px; }
+  .email-subject { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+  .email-to { font-size: 11px; color: var(--text-3); margin-bottom: 8px; }
+  .email-body { font-size: 12px; color: var(--text-2); line-height: 1.65; }
+  .email-body strong { color: var(--text); }
+
+  /* ── Send section ── */
+  .send-section { padding: 14px; display: flex; flex-direction: column; gap: 9px; }
+  .send-opt { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-2); }
+  .send-opt input[type="checkbox"] { accent-color: var(--purple-500); width: 14px; height: 14px; }
+  .send-btn {
+    width: 100%;
+    padding: 10px;
+    background: var(--purple-500);
+    color: #fff;
+    border: none; border-radius: 8px;
+    font-size: 13px; font-weight: 500;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+    transition: background 0.15s, transform 0.1s;
+  }
+  .send-btn:hover { background: var(--purple-700); }
+  .send-btn:active { transform: scale(0.98); }
+  .send-btn i { font-size: 15px; }
+
+  /* ── Toast ── */
+  .toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: #1A1A1A; color: #fff;
+    padding: 11px 18px;
+    border-radius: 10px;
+    font-size: 13px;
+    display: flex; align-items: center; gap: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+    opacity: 0; pointer-events: none;
+    transform: translateY(8px);
+    transition: opacity 0.25s, transform 0.25s;
+    z-index: 999;
+  }
+  .toast.show { opacity: 1; pointer-events: auto; transform: translateY(0); }
+  .toast i { color: #5DCAA5; font-size: 16px; }
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- ═══ SIDEBAR ═══ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-inner">
+      <div class="sidebar-logo">
+        <div class="logo-mark"><i class="ti ti-notes"></i></div>
+        <span class="logo-name">Notulen</span>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-label">Menu utama</div>
+        <div class="nav-item active"><i class="ti ti-file-text"></i> Buat notulen</div>
+        <div class="nav-item"><i class="ti ti-history"></i> Riwayat <span class="nav-badge">12</span></div>
+        <div class="nav-item"><i class="ti ti-users"></i> Kontak</div>
+        <div class="nav-item"><i class="ti ti-template"></i> Template</div>
+
+        <div class="nav-label" style="margin-top:6px;">Pengaturan</div>
+        <div class="nav-item"><i class="ti ti-bell"></i> Notifikasi</div>
+        <div class="nav-item"><i class="ti ti-settings"></i> Preferensi</div>
+      </nav>
+
+      <div class="sidebar-user">
+        <div class="user-av">AR</div>
+        <div class="user-info">
+          <div class="user-name">Ahmad Rasyid</div>
+          <div class="user-role">Admin</div>
+        </div>
+        <i class="ti ti-dots" style="color:var(--text-3);font-size:16px;cursor:pointer;"></i>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ═══ MAIN ═══ -->
+  <div class="main">
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <button class="toggle-btn" id="toggleBtn" onclick="toggleSidebar()" title="Tampilkan / sembunyikan sidebar">
+        <i class="ti ti-layout-sidebar" id="toggleIcon"></i>
+      </button>
+      <div class="topbar-title">Notulen Rapat</div>
+      <span class="topbar-meta">Senin, 26 Mei 2026 &nbsp;·&nbsp; Draft</span>
+      <div class="topbar-actions">
+        <button class="tbtn"><i class="ti ti-eye"></i> Preview</button>
+        <button class="tbtn"><i class="ti ti-download"></i> Ekspor PDF</button>
+        <button class="tbtn tbtn-primary"><i class="ti ti-device-floppy"></i> Simpan</button>
+      </div>
+    </header>
+
+    <!-- Body -->
+    <div class="body-wrap">
+
+      <!-- Form scroll area -->
+      <div class="form-scroll">
+
+        <!-- 1. Informasi Rapat -->
+        <div class="card">
+          <div class="card-head">
+            <div class="card-head-left">
+              <i class="ti ti-info-circle"></i>
+              <span>Informasi rapat</span>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="field">
+              <label class="flabel">Judul rapat</label>
+              <input class="finput" type="text" value="Rapat Koordinasi Proyek Q2 2026" />
+            </div>
+            <div class="field-grid">
+              <div class="field">
+                <label class="flabel">Tanggal</label>
+                <input class="finput" type="date" value="2026-05-26" />
+              </div>
+              <div class="field">
+                <label class="flabel">Waktu mulai – selesai</label>
+                <input class="finput" type="text" value="09.00 – 11.00 WIB" />
+              </div>
+              <div class="field">
+                <label class="flabel">Lokasi / platform</label>
+                <input class="finput" type="text" value="Ruang Rapat A / Google Meet" />
+              </div>
+              <div class="field">
+                <label class="flabel">Pemimpin rapat</label>
+                <input class="finput" type="text" value="Ahmad Rasyid" />
+              </div>
+              <div class="field">
+                <label class="flabel">Notulis</label>
+                <input class="finput" type="text" value="Siti Rahayu" />
+              </div>
+              <div class="field">
+                <label class="flabel">Divisi / departemen</label>
+                <input class="finput" type="text" value="Product & Engineering" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Peserta -->
+        <div class="card">
+          <div class="card-head">
+            <div class="card-head-left">
+              <i class="ti ti-users"></i>
+              <span>Daftar peserta</span>
+            </div>
+            <span style="font-size:11px;color:var(--text-3);">7 hadir</span>
+          </div>
+          <div class="card-body">
+            <div class="field">
+              <textarea class="ftextarea" style="min-height:60px;">Ahmad Rasyid (Pemimpin), Siti Rahayu (Notulis), Budi Santoso, Dina Melati, Rizky Hadi, Fitri Nanda, Yusuf Khoirul</textarea>
+            </div>
+            <div class="add-row"><i class="ti ti-plus"></i> Tambah peserta</div>
+          </div>
+        </div>
+
+        <!-- 3. Agenda -->
+        <div class="card">
+          <div class="card-head">
+            <div class="card-head-left">
+              <i class="ti ti-list-check"></i>
+              <span>Agenda pembahasan</span>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="agenda-list">
+              <div class="agenda-row">
+                <div class="agenda-num">1</div>
+                <div class="agenda-text">Review capaian target Q1 dan gap analisis</div>
+                <i class="ti ti-grip-vertical agenda-drag"></i>
+              </div>
+              <div class="agenda-row">
+                <div class="agenda-num">2</div>
+                <div class="agenda-text">Perencanaan roadmap fitur produk Q2</div>
+                <i class="ti ti-grip-vertical agenda-drag"></i>
+              </div>
+              <div class="agenda-row">
+                <div class="agenda-num">3</div>
+                <div class="agenda-text">Pembagian tugas tim lintas divisi</div>
+                <i class="ti ti-grip-vertical agenda-drag"></i>
+              </div>
+              <div class="agenda-row">
+                <div class="agenda-num">4</div>
+                <div class="agenda-text">Diskusi anggaran dan kebutuhan sumber daya</div>
+                <i class="ti ti-grip-vertical agenda-drag"></i>
+              </div>
+            </div>
+            <div class="add-row"><i class="ti ti-plus"></i> Tambah agenda</div>
+          </div>
+        </div>
+
+        <!-- 4. Poin Keputusan -->
+        <div class="card">
+          <div class="card-head">
+            <div class="card-head-left">
+              <i class="ti ti-bulb"></i>
+              <span>Poin keputusan & catatan</span>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="field">
+              <label class="flabel">Keputusan yang disepakati</label>
+              <textarea class="ftextarea" style="min-height:90px;">• Target Q2 ditetapkan sebesar 120% dari Q1 dengan fokus pada segmen enterprise.
+• Fitur pelaporan otomatis diprioritaskan untuk sprint Mei–Juni.
+• Koordinasi lintas divisi dilakukan melalui weekly sync setiap Senin pagi.</textarea>
+            </div>
+            <div class="field">
+              <label class="flabel">Catatan tambahan</label>
+              <textarea class="ftextarea">Rapat berjalan lancar. Semua peserta hadir tepat waktu. Keputusan bersifat final dan mengikat.</textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. Action Items -->
+        <div class="card">
+          <div class="card-head">
+            <div class="card-head-left">
+              <i class="ti ti-checkbox"></i>
+              <span>Tindak lanjut (action items)</span>
+            </div>
+            <span style="font-size:11px;color:var(--text-3);">3 item · 1 selesai</span>
+          </div>
+          <div class="card-body" style="padding:0;">
+            <table class="action-table">
+              <thead>
+                <tr>
+                  <th>Tugas</th>
+                  <th>PIC</th>
+                  <th>Tenggat</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Finalisasi dokumen scope Q2</td>
+                  <td class="pic-chip">Budi S.</td>
+                  <td style="color:var(--text-3);font-size:12px;">02 Jun 2026</td>
+                  <td><span class="status-pill pill-open">Buka</span></td>
+                </tr>
+                <tr>
+                  <td>Setup weekly sync Google Calendar</td>
+                  <td class="pic-chip">Siti R.</td>
+                  <td style="color:var(--text-3);font-size:12px;">27 Mei 2026</td>
+                  <td><span class="status-pill pill-done">Selesai</span></td>
+                </tr>
+                <tr>
+                  <td>Kirim brief kebutuhan ke tim desain</td>
+                  <td class="pic-chip">Dina M.</td>
+                  <td style="color:var(--text-3);font-size:12px;">30 Mei 2026</td>
+                  <td><span class="status-pill pill-open">Buka</span></td>
+                </tr>
+              </tbody>
+            </table>
+            <div style="padding:10px 18px;">
+              <div class="add-row"><i class="ti ti-plus"></i> Tambah action item</div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /form-scroll -->
+
+      <!-- ═══ RIGHT PANEL ═══ -->
+      <aside class="right-panel">
+
+        <!-- Recipients -->
+        <div class="rpanel-section">
+          <div class="rpanel-head">
+            <div class="rpanel-head-left"><i class="ti ti-send"></i> Penerima</div>
+            <span class="rcount">5</span>
+          </div>
+          <div class="recipient-list">
+            <div class="ritem">
+              <div class="rav" style="background:#EEEDFE;color:#3C3489;">BS</div>
+              <div class="rinfo"><div class="rname">Budi Santoso</div><div class="remail">budi@perusahaan.co.id</div></div>
+              <i class="ti ti-x rremove"></i>
+            </div>
+            <div class="ritem">
+              <div class="rav" style="background:#E1F5EE;color:#085041;">SR</div>
+              <div class="rinfo"><div class="rname">Siti Rahayu</div><div class="remail">siti@perusahaan.co.id</div></div>
+              <i class="ti ti-x rremove"></i>
+            </div>
+            <div class="ritem">
+              <div class="rav" style="background:#FAECE7;color:#712B13;">DM</div>
+              <div class="rinfo"><div class="rname">Dina Melati</div><div class="remail">dina@perusahaan.co.id</div></div>
+              <i class="ti ti-x rremove"></i>
+            </div>
+            <div class="ritem">
+              <div class="rav" style="background:#FBEAF0;color:#72243E;">RH</div>
+              <div class="rinfo"><div class="rname">Rizky Hadi</div><div class="remail">rizky@perusahaan.co.id</div></div>
+              <i class="ti ti-x rremove"></i>
+            </div>
+            <div class="ritem">
+              <div class="rav" style="background:#E6F1FB;color:#0C447C;">FN</div>
+              <div class="rinfo"><div class="rname">Fitri Nanda</div><div class="remail">fitri@perusahaan.co.id</div></div>
+              <i class="ti ti-x rremove"></i>
+            </div>
+          </div>
+          <div class="add-recipient"><i class="ti ti-user-plus"></i> Tambah penerima</div>
+        </div>
+
+        <!-- Email preview -->
+        <div class="email-preview">
+          <div class="preview-label">Preview email</div>
+          <div class="email-card">
+            <div class="email-subject">📋 Notulen — Rapat Koordinasi Proyek Q2 2026</div>
+            <div class="email-to">Kepada: 5 penerima &nbsp;·&nbsp; CC: -</div>
+            <div class="email-body">
+              Yth. Tim,<br><br>
+              Berikut kami kirimkan notulen <strong>Rapat Koordinasi Proyek Q2 2026</strong> yang diselenggarakan pada Senin, 26 Mei 2026 pukul 09.00–11.00 WIB.<br><br>
+              Mohon ditindaklanjuti sesuai action items yang telah disepakati.<br><br>
+              Salam,<br>
+              <strong>Ahmad Rasyid</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Send -->
+        <div class="send-section">
+          <div class="send-opt">
+            <input type="checkbox" id="chkPdf" checked />
+            <label for="chkPdf">Sertakan lampiran PDF</label>
+          </div>
+          <div class="send-opt">
+            <input type="checkbox" id="chkCc" />
+            <label for="chkCc">CC ke pemimpin rapat</label>
+          </div>
+          <div class="send-opt">
+            <input type="checkbox" id="chkSchedule" />
+            <label for="chkSchedule">Jadwalkan pengiriman</label>
+          </div>
+          <button class="send-btn" onclick="sendNotulen()">
+            <i class="ti ti-send"></i> Kirim ke 5 penerima
+          </button>
+        </div>
+
+      </aside>
+    </div><!-- /body-wrap -->
+
+  </div><!-- /main -->
+</div><!-- /shell -->
+
+<!-- Toast -->
+<div class="toast" id="toast">
+  <i class="ti ti-check"></i> Notulen berhasil dikirim ke 5 penerima!
+</div>
+
+<script>
+  var sidebarOpen = true;
+
+  function toggleSidebar() {
+    var sb = document.getElementById('sidebar');
+    var icon = document.getElementById('toggleIcon');
+    sidebarOpen = !sidebarOpen;
+    if (sidebarOpen) {
+      sb.classList.remove('hidden');
+      icon.className = 'ti ti-layout-sidebar';
+    } else {
+      sb.classList.add('hidden');
+      icon.className = 'ti ti-layout-sidebar-right';
+    }
+  }
+
+  function sendNotulen() {
+    var t = document.getElementById('toast');
+    t.classList.add('show');
+    setTimeout(function () { t.classList.remove('show'); }, 3200);
+  }
+
+  document.querySelectorAll('.rremove').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      btn.closest('.ritem').style.opacity = '0.3';
+      btn.closest('.ritem').style.pointerEvents = 'none';
+    });
+  });
+</script>
+
+</body>
+</html>
