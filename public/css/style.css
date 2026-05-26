@@ -298,7 +298,7 @@ html, body { height: 100%; background: var(--bg); font-family: 'DM Sans', sans-s
 .settings-section-head:hover { background: var(--teal-50); }
 .settings-chevron { font-size: 16px; color: var(--text-3); transition: transform .25s; }
 .settings-chevron.open { transform: rotate(180deg); }
-.settings-section-body { display: none; padding: 16px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 12px; }
+.settings-section-body { display: none; padding: 16px; border-top: 1px solid var(--border); flex-direction: column; gap: 12px; }
 .settings-section-body.open { display: flex; }
 
 /* Logout card */

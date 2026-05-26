@@ -53,7 +53,8 @@ router.put('/:id', requireRole('admin', 'user'), async (req, res) => {
     if (req.user.role === 'user' && String(doc.createdBy) !== String(req.user._id)) {
       return res.status(403).json({ ok: false, message: 'Akses ditolak' });
     }
-    Object.assign(doc, req.body);
+    const allowed = ['judul','tanggal','waktuMulai','waktuSelesai','lokasi','pemimpinRapat','notulis','divisi','peserta','agenda','keputusan','catatan','actionItems','penerima'];
+    allowed.forEach(k => { if (req.body[k] !== undefined) doc[k] = req.body[k]; });
     await doc.save();
     res.json({ ok: true, data: doc });
   } catch (e) {
