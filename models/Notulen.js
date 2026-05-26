@@ -24,7 +24,8 @@ const notulenSchema = new mongoose.Schema({
   penerima: [{ nama: String, email: String }],
   status: { type: String, enum: ['draft', 'sent'], default: 'draft' },
   sentAt: { type: Date },
-  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  log: [{ aksi: String, oleh: { nama: String, email: String }, waktu: { type: Date, default: Date.now } }]
 }, { timestamps: true });
 
 module.exports = mongoose.model('Notulen', notulenSchema);

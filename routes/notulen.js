@@ -37,7 +37,10 @@ router.get('/:id', async (req, res) => {
 // POST create — admin & user only (executive read-only)
 router.post('/', requireRole('admin', 'user'), async (req, res) => {
   try {
-    const doc = new Notulen({ ...req.body, createdBy: req.user._id });
+    const doc = new Notulen({
+      ...req.body, createdBy: req.user._id,
+      log: [{ aksi: 'Dibuat', oleh: { nama: req.user.nama, email: req.user.email } }]
+    });
     await doc.save();
     res.status(201).json({ ok: true, data: doc });
   } catch (e) {
@@ -55,6 +58,7 @@ router.put('/:id', requireRole('admin', 'user'), async (req, res) => {
     }
     const allowed = ['judul','tanggal','waktuMulai','waktuSelesai','lokasi','pemimpinRapat','notulis','divisi','peserta','agenda','keputusan','catatan','actionItems','penerima'];
     allowed.forEach(k => { if (req.body[k] !== undefined) doc[k] = req.body[k]; });
+    doc.log.push({ aksi: 'Diperbarui', oleh: { nama: req.user.nama, email: req.user.email } });
     await doc.save();
     res.json({ ok: true, data: doc });
   } catch (e) {
@@ -89,6 +93,7 @@ router.post('/:id/send', requireRole('admin', 'user'), async (req, res) => {
     await sendNotulen(doc, { ccPemimpin });
     doc.status = 'sent';
     doc.sentAt = new Date();
+    doc.log.push({ aksi: `Dikirim ke ${doc.penerima.length} penerima`, oleh: { nama: req.user.nama, email: req.user.email } });
     await doc.save();
     res.json({ ok: true, message: `Notulen berhasil dikirim ke ${doc.penerima.length} penerima` });
   } catch (e) {

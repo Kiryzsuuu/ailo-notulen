@@ -149,6 +149,10 @@
 ═══════════════════════════════════════ -->
 <div id="appShell" class="shell" style="display:none;">
 
+  <!-- Mobile overlays -->
+  <div id="sidebarOverlay" class="sidebar-overlay" onclick="closeMobileSidebar()"></div>
+  <div id="panelOverlay"   class="sidebar-overlay" onclick="closeMobilePanel()"></div>
+
   <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-inner">
@@ -321,6 +325,11 @@
             </button>
           </div>
         </aside>
+      </div>
+
+      <!-- ── DETAIL NOTULEN ── -->
+      <div id="pageDetail" class="page">
+        <div class="page-content detail-content" id="detailContent"></div>
       </div>
 
       <!-- ── RIWAYAT ── -->
@@ -547,8 +556,8 @@
   <span id="toastMsg">Berhasil</span>
 </div>
 
-<!-- Mobile FAB -->
-<button class="fab-send" id="fabSend" onclick="kirimNotulen()"><i class="ti ti-send"></i></button>
+<!-- Mobile FAB — opens penerima panel -->
+<button class="fab-send" id="fabSend" onclick="toggleMobilePanel()"><i class="ti ti-send"></i></button>
 
 <script src="js/app.js"></script>
 </body>

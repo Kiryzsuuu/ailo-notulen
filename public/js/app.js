@@ -216,6 +216,9 @@ function showPage(page) {
       : '';
     applyReadonlyMode(currentUser?.role === 'executive');
     document.getElementById('wizardBar').style.display = '';
+  } else if (page === 'detail') {
+    actions.innerHTML = '';
+    document.getElementById('wizardBar').style.display = 'none';
   } else if (page === 'riwayat') {
     actions.innerHTML = `<button class="tbtn tbtn-primary" onclick="showPage('buat')"><i class="ti ti-plus"></i><span class="btn-text"> Buat Baru</span></button>`;
     document.getElementById('wizardBar').style.display = 'none';
@@ -286,12 +289,29 @@ function toggleSidebar() {
   sidebarOpen = !sidebarOpen;
   document.getElementById('sidebar').classList.toggle('hidden', !sidebarOpen);
   document.getElementById('toggleIcon').className = sidebarOpen ? 'ti ti-layout-sidebar' : 'ti ti-layout-sidebar-right';
+  if (window.innerWidth <= 680) {
+    document.getElementById('sidebarOverlay').classList.toggle('show', sidebarOpen);
+  }
 }
 function closeMobileSidebar() {
   document.getElementById('sidebar').classList.add('hidden');
+  document.getElementById('sidebarOverlay').classList.remove('show');
   sidebarOpen = false;
 }
+function toggleMobilePanel() {
+  const panel = document.getElementById('rightPanel');
+  const overlay = document.getElementById('panelOverlay');
+  if (window.innerWidth > 680) { kirimNotulen(); return; }
+  const isOpen = panel.classList.contains('mobile-open');
+  panel.classList.toggle('mobile-open', !isOpen);
+  overlay.classList.toggle('show', !isOpen);
+}
+function closeMobilePanel() {
+  document.getElementById('rightPanel').classList.remove('mobile-open');
+  document.getElementById('panelOverlay').classList.remove('show');
+}
 function handleResize() {
+  if (window.innerWidth > 680) closeMobilePanel();
   if (window.innerWidth <= 680 && sidebarOpen) closeMobileSidebar();
 }
 
@@ -486,19 +506,21 @@ function renderRiwayat(list) {
   const canEdit = currentUser?.role !== 'executive';
   el.innerHTML = list.map(n => {
     const tgl = new Date(n.tanggal).toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' });
-    const badge = n.status==='sent' ? '<span class="status-badge badge-sent">Terkirim</span>' : '<span class="status-badge badge-draft">Draft</span>';
+    const badge = n.status==='sent'
+      ? '<span class="status-badge badge-sent"><i class="ti ti-circle-check"></i> Terkirim</span>'
+      : '<span class="status-badge badge-draft"><i class="ti ti-file"></i> Draft</span>';
     const author = n.createdBy?.nama ? `<span><i class="ti ti-user" style="font-size:11px;"></i> ${esc(n.createdBy.nama)}</span>` : '';
-    return `<div class="riwayat-card" onclick="loadNotulen('${n._id}')">
+    return `<div class="riwayat-card" onclick="openDetail('${n._id}')">
       <div class="riwayat-card-title">${esc(n.judul)}</div>
       <div class="riwayat-card-meta">
         <span><i class="ti ti-calendar" style="font-size:12px;"></i> ${tgl}</span>
-        <span><i class="ti ti-send" style="font-size:12px;"></i> ${n.penerima?.length||0} penerima</span>
+        <span><i class="ti ti-users" style="font-size:12px;"></i> ${n.penerima?.length||0} penerima</span>
         ${author}
       </div>
       <div class="riwayat-card-footer">
         ${badge}
         <div class="riwayat-card-actions" onclick="event.stopPropagation()">
-          <div class="icon-btn" title="Buka" onclick="loadNotulen('${n._id}')"><i class="ti ti-edit" style="font-size:14px;"></i></div>
+          ${canEdit ? `<div class="icon-btn" title="Edit" onclick="editNotulen('${n._id}')"><i class="ti ti-pencil" style="font-size:14px;"></i></div>` : ''}
           ${canEdit ? `<div class="icon-btn danger" title="Hapus" onclick="confirmDeleteNotulen('${n._id}','${esc(n.judul)}')"><i class="ti ti-trash" style="font-size:14px;"></i></div>` : ''}
         </div>
       </div>
@@ -509,7 +531,142 @@ function filterRiwayat() {
   const q = document.getElementById('searchRiwayat').value.toLowerCase();
   renderRiwayat(st.allNotulen.filter(n=>n.judul.toLowerCase().includes(q)));
 }
-async function loadNotulen(id) {
+
+/* ─────────────────────────────────────
+   DETAIL VIEW (read-only)
+───────────────────────────────────── */
+async function openDetail(id) {
+  try {
+    const r = await api('GET', `/api/notulen/${id}`);
+    if (!r.ok) throw new Error(r.message);
+    renderDetail(r.data);
+    showPage('detail');
+  } catch (e) { showToast('Gagal membuka: '+e.message,'error'); }
+}
+
+function renderDetail(n) {
+  const canEdit = currentUser?.role !== 'executive';
+  const tgl = new Date(n.tanggal).toLocaleDateString('id-ID', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+  const waktu = [n.waktuMulai, n.waktuSelesai].filter(Boolean).join(' – ') + (n.waktuMulai ? ' WIB' : '');
+  const statusBadge = n.status==='sent'
+    ? '<span class="status-badge badge-sent"><i class="ti ti-circle-check"></i> Terkirim</span>'
+    : '<span class="status-badge badge-draft"><i class="ti ti-file"></i> Draft</span>';
+
+  const infoRows = [
+    ['Tanggal', tgl],
+    waktu ? ['Waktu', waktu] : null,
+    n.lokasi ? ['Lokasi', esc(n.lokasi)] : null,
+    n.pemimpinRapat ? ['Pemimpin', esc(n.pemimpinRapat)] : null,
+    n.notulis ? ['Notulis', esc(n.notulis)] : null,
+    n.divisi ? ['Divisi', esc(n.divisi)] : null,
+  ].filter(Boolean).map(([k,v]) => `<div class="detail-info-row"><span class="detail-info-key">${k}</span><span class="detail-info-val">${v}</span></div>`).join('');
+
+  const agendaHtml = (n.agenda||[]).filter(a=>a.trim()).length
+    ? `<div class="detail-section">
+        <div class="detail-sec-title"><i class="ti ti-list-check"></i> Agenda</div>
+        <ol class="detail-agenda-list">${(n.agenda||[]).filter(a=>a.trim()).map(a=>`<li>${esc(a)}</li>`).join('')}</ol>
+      </div>` : '';
+
+  const keputusanHtml = n.keputusan
+    ? `<div class="detail-section">
+        <div class="detail-sec-title"><i class="ti ti-bulb"></i> Keputusan yang Disepakati</div>
+        <div class="detail-text">${esc(n.keputusan).replace(/\n/g,'<br>')}</div>
+      </div>` : '';
+
+  const catatanHtml = n.catatan
+    ? `<div class="detail-section">
+        <div class="detail-sec-title"><i class="ti ti-notes"></i> Catatan Tambahan</div>
+        <div class="detail-text detail-text-muted">${esc(n.catatan).replace(/\n/g,'<br>')}</div>
+      </div>` : '';
+
+  const pesertaHtml = n.peserta
+    ? `<div class="detail-section">
+        <div class="detail-sec-title"><i class="ti ti-users"></i> Peserta</div>
+        <div class="detail-peserta-list">${n.peserta.split(',').map(p=>`<span class="detail-peserta-chip">${esc(p.trim())}</span>`).join('')}</div>
+      </div>` : '';
+
+  const scMap = { done: ['#3B6D11','#EAF3DE','Selesai'], open: ['#854F0B','#FAEEDA','Terbuka'] };
+  const actionHtml = (n.actionItems||[]).length
+    ? `<div class="detail-section">
+        <div class="detail-sec-title"><i class="ti ti-checkbox"></i> Tindak Lanjut</div>
+        <div class="detail-table-wrap"><table class="action-table">
+          <thead><tr><th>Tugas</th><th>PIC</th><th>Tenggat</th><th>Status</th></tr></thead>
+          <tbody>${(n.actionItems||[]).map(a => {
+            const tgl = a.tenggat ? new Date(a.tenggat).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}) : '—';
+            const [sc,sb,sl] = scMap[a.status]||scMap.open;
+            return `<tr><td>${esc(a.tugas)}</td><td style="color:var(--teal-500)">${esc(a.pic)}</td><td>${tgl}</td>
+              <td><span style="background:${sb};color:${sc};padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600;">${sl}</span></td></tr>`;
+          }).join('')}</tbody>
+        </table></div>
+      </div>` : '';
+
+  const penerimaHtml = (n.penerima||[]).length
+    ? `<div class="detail-section">
+        <div class="detail-sec-title"><i class="ti ti-send"></i> Penerima Email</div>
+        <div class="detail-peserta-list">${n.penerima.map(p=>`<span class="detail-peserta-chip"><i class="ti ti-mail" style="font-size:10px;opacity:.6"></i> ${esc(p.nama)} &lt;${esc(p.email)}&gt;</span>`).join('')}</div>
+      </div>` : '';
+
+  const logHtml = (n.log||[]).length
+    ? `<div class="detail-section detail-log-section">
+        <div class="detail-sec-title"><i class="ti ti-history"></i> Log Aktivitas</div>
+        <div class="detail-log">${[...(n.log||[])].reverse().map(l => {
+          const dt = new Date(l.waktu).toLocaleString('id-ID', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+          return `<div class="log-row">
+            <div class="log-dot"></div>
+            <div class="log-body">
+              <div class="log-aksi">${esc(l.aksi)}</div>
+              <div class="log-meta">${esc(l.oleh?.nama||'—')} · ${dt}</div>
+            </div>
+          </div>`;
+        }).join('')}</div>
+      </div>` : '';
+
+  const sentInfo = n.sentAt
+    ? `<div style="font-size:11px;color:var(--text-3);margin-top:4px;">Dikirim ${new Date(n.sentAt).toLocaleString('id-ID',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div>` : '';
+
+  document.getElementById('detailContent').innerHTML = `
+    <div class="detail-header">
+      <button class="tbtn" onclick="showPage('riwayat')"><i class="ti ti-arrow-left"></i> Riwayat</button>
+      <div class="detail-header-actions">
+        ${canEdit ? `<button class="tbtn" onclick="editNotulen('${n._id}')"><i class="ti ti-pencil"></i> Edit</button>` : ''}
+        ${canEdit && n.status!=='sent' ? `<button class="tbtn tbtn-primary" onclick="openDetailSend('${n._id}')"><i class="ti ti-send"></i> Kirim</button>` : ''}
+        ${canEdit ? `<button class="tbtn tbtn-danger" onclick="confirmDeleteNotulen('${n._id}','${esc(n.judul)}')"><i class="ti ti-trash"></i></button>` : ''}
+      </div>
+    </div>
+
+    <div class="detail-title-block">
+      <div class="detail-title">${esc(n.judul)}</div>
+      <div class="detail-title-meta">${statusBadge}${sentInfo}</div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><div class="card-head-left"><i class="ti ti-info-circle"></i><span>Informasi Rapat</span></div></div>
+      <div class="detail-info-grid">${infoRows}</div>
+    </div>
+
+    ${pesertaHtml ? `<div class="card"><div class="card-body">${pesertaHtml}</div></div>` : ''}
+    ${agendaHtml ? `<div class="card"><div class="card-body">${agendaHtml}</div></div>` : ''}
+    ${keputusanHtml || catatanHtml ? `<div class="card"><div class="card-body">${keputusanHtml}${catatanHtml}</div></div>` : ''}
+    ${actionHtml ? `<div class="card"><div class="card-body" style="padding:0;">${actionHtml}<div style="height:8px"></div></div></div>` : ''}
+    ${penerimaHtml ? `<div class="card"><div class="card-body">${penerimaHtml}</div></div>` : ''}
+    ${logHtml ? `<div class="card"><div class="card-body">${logHtml}</div></div>` : ''}
+  `;
+}
+
+async function openDetailSend(id) {
+  try {
+    const r = await api('POST', `/api/notulen/${id}/send`, { ccPemimpin: false });
+    if (!r.ok) throw new Error(r.message);
+    showDialog({ type:'success', icon:'ti-circle-check', title:'Berhasil Dikirim!', message: r.message,
+      actions:[{ label:'Oke', cls:'dialog-btn-primary', icon:'ti-check', onClick:() => { closeDialog(); openDetail(id); } }] });
+    loadRiwayat();
+  } catch(e) {
+    showDialog({ type:'error', icon:'ti-circle-x', title:'Pengiriman Gagal', message: e.message,
+      actions:[{ label:'Tutup', cls:'dialog-btn-ghost', onClick:closeDialog }] });
+  }
+}
+
+async function editNotulen(id) {
   try {
     const r = await api('GET', `/api/notulen/${id}`);
     if (!r.ok) throw new Error(r.message);
@@ -525,9 +682,10 @@ async function loadNotulen(id) {
     st.penerima = n.penerima || [];
     renderAgenda(); renderActions(); renderRecipients(); updateEmailPreview(); updateTopbarMeta();
     showPage('buat'); wizardGoTo(1);
-    showToast('Notulen dimuat');
   } catch (e) { showToast('Gagal memuat: '+e.message,'error'); }
 }
+
+function loadNotulen(id) { openDetail(id); }
 function confirmDeleteNotulen(id, judul) {
   showDialog({ type:'warning', icon:'ti-trash', title:'Hapus Notulen?',
     message: `Notulen <strong>"${esc(judul)}"</strong> akan dihapus permanen dan tidak dapat dipulihkan.`,
@@ -542,7 +700,7 @@ async function deleteNotulen(id) {
   try {
     await api('DELETE', `/api/notulen/${id}`);
     if (st.currentId === id) resetForm();
-    loadRiwayat();
+    showPage('riwayat');
     showToast('Notulen dihapus');
   } catch { showToast('Gagal menghapus','error'); }
 }
