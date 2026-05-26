@@ -215,20 +215,26 @@ function showPage(page) {
          <button class="tbtn" onclick="simpanNotulen()"><i class="ti ti-device-floppy"></i><span class="btn-text"> Simpan</span></button>`
       : '';
     applyReadonlyMode(currentUser?.role === 'executive');
+    document.getElementById('wizardBar').style.display = '';
   } else if (page === 'riwayat') {
     actions.innerHTML = `<button class="tbtn tbtn-primary" onclick="showPage('buat')"><i class="ti ti-plus"></i><span class="btn-text"> Buat Baru</span></button>`;
+    document.getElementById('wizardBar').style.display = 'none';
     loadRiwayat();
   } else if (page === 'kontak') {
     actions.innerHTML = `<button class="tbtn tbtn-primary" onclick="openContactModal()"><i class="ti ti-user-plus"></i><span class="btn-text"> Tambah</span></button>`;
+    document.getElementById('wizardBar').style.display = 'none';
     loadContacts();
   } else if (page === 'pengguna') {
     actions.innerHTML = `<button class="tbtn tbtn-primary" onclick="openUserModal()"><i class="ti ti-user-plus"></i><span class="btn-text"> Tambah</span></button>`;
+    document.getElementById('wizardBar').style.display = 'none';
     loadUsers();
   } else if (page === 'profil') {
     actions.innerHTML = '';
+    document.getElementById('wizardBar').style.display = 'none';
     loadProfilePage();
   } else {
     actions.innerHTML = '';
+    document.getElementById('wizardBar').style.display = 'none';
   }
   updateTopbarMeta();
 }
@@ -518,7 +524,7 @@ async function loadNotulen(id) {
     st.actionItems = (n.actionItems||[]).map(a => ({ ...a, tenggat: a.tenggat ? a.tenggat.split('T')[0] : '' }));
     st.penerima = n.penerima || [];
     renderAgenda(); renderActions(); renderRecipients(); updateEmailPreview(); updateTopbarMeta();
-    showPage('buat');
+    showPage('buat'); wizardGoTo(1);
     showToast('Notulen dimuat');
   } catch (e) { showToast('Gagal memuat: '+e.message,'error'); }
 }
@@ -544,6 +550,37 @@ function resetForm() {
   st.currentId = null; st.agenda = []; st.actionItems = []; st.penerima = [];
   ['fJudul','fLokasi','fPemimpin','fNotulis','fDivisi','fPeserta','fKeputusan','fCatatan','fWaktuMulai','fWaktuSelesai'].forEach(id => sv(id,''));
   setToday(); renderAgenda(); renderActions(); renderRecipients(); updateEmailPreview(); updateTopbarMeta();
+  wizardGoTo(1);
+}
+
+/* ─────────────────────────────────────
+   WIZARD NAVIGATION
+───────────────────────────────────── */
+let _wizardStep = 1;
+function wizardGoTo(step) {
+  _wizardStep = step;
+  for (let i = 1; i <= 3; i++) {
+    const panel = document.getElementById('wpanel' + i);
+    const dot   = document.getElementById('wstep' + i);
+    const line  = document.getElementById('wline' + i);
+    if (panel) panel.style.display = i === step ? '' : 'none';
+    if (dot) {
+      dot.classList.toggle('active', i === step);
+      dot.classList.toggle('done',   i < step);
+    }
+    if (line) line.classList.toggle('done', i < step);
+  }
+  document.getElementById('formScroll')?.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function wizardNext() {
+  if (_wizardStep === 1) {
+    if (!v('fJudul').trim()) { showToast('Judul rapat wajib diisi','error'); document.getElementById('fJudul').focus(); return; }
+    if (!v('fTanggal'))       { showToast('Tanggal wajib diisi','error'); return; }
+  }
+  if (_wizardStep < 3) wizardGoTo(_wizardStep + 1);
+}
+function wizardPrev() {
+  if (_wizardStep > 1) wizardGoTo(_wizardStep - 1);
 }
 
 /* ─────────────────────────────────────

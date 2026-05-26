@@ -4,8 +4,9 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Ailo Notulen</title>
+<link rel="icon" type="image/png" href="/Logo_AILO_Squared-removebg-preview.png"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Serif+Display&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css"/>
 <link rel="stylesheet" href="css/style.css"/>
 </head>
@@ -20,7 +21,7 @@
   <div id="screenLogin" class="auth-screen active">
     <div class="auth-card">
       <div class="auth-brand">
-        <img src="/logo.png" alt="Ailo" class="auth-logo"/>
+        <img src="/Logo_AILO_Squared-removebg-preview.png" alt="Ailo" class="auth-logo"/>
         <div><div class="auth-brand-name">Ailo Notulen</div><div class="auth-brand-sub">Telkom University's Center of Excellence</div></div>
       </div>
       <div class="auth-divider"></div>
@@ -53,7 +54,7 @@
   <div id="screenRegister" class="auth-screen">
     <div class="auth-card">
       <div class="auth-brand">
-        <img src="/logo.png" alt="Ailo" class="auth-logo"/>
+        <img src="/Logo_AILO_Squared-removebg-preview.png" alt="Ailo" class="auth-logo"/>
         <div><div class="auth-brand-name">Ailo Notulen</div><div class="auth-brand-sub">Buat akun baru</div></div>
       </div>
       <div class="auth-divider"></div>
@@ -92,7 +93,7 @@
   <div id="screenForgot" class="auth-screen">
     <div class="auth-card">
       <div class="auth-brand">
-        <img src="/logo.png" alt="Ailo" class="auth-logo"/>
+        <img src="/Logo_AILO_Squared-removebg-preview.png" alt="Ailo" class="auth-logo"/>
         <div><div class="auth-brand-name">Ailo Notulen</div><div class="auth-brand-sub">Reset password</div></div>
       </div>
       <div class="auth-divider"></div>
@@ -113,7 +114,7 @@
   <div id="screenReset" class="auth-screen">
     <div class="auth-card">
       <div class="auth-brand">
-        <img src="/logo.png" alt="Ailo" class="auth-logo"/>
+        <img src="/Logo_AILO_Squared-removebg-preview.png" alt="Ailo" class="auth-logo"/>
         <div><div class="auth-brand-name">Ailo Notulen</div><div class="auth-brand-sub">Buat password baru</div></div>
       </div>
       <div class="auth-divider"></div>
@@ -152,7 +153,7 @@
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-inner">
       <div class="sidebar-logo">
-        <img src="/logo.png" alt="Ailo" class="logo-img"/>
+        <img src="/Logo_AILO_Squared-removebg-preview.png" alt="Ailo" class="logo-img"/>
         <span class="logo-name">Notulen</span>
       </div>
       <nav class="sidebar-nav" id="sidebarNav"></nav>
@@ -172,7 +173,6 @@
     <header class="topbar">
       <button class="toggle-btn" id="toggleBtn" onclick="toggleSidebar()"><i class="ti ti-layout-sidebar" id="toggleIcon"></i></button>
       <div class="topbar-brand">
-        <img src="/logo.png" alt="Ailo" class="topbar-logo-img"/>
         <div class="topbar-title">Ailo Notulen</div>
       </div>
       <span class="topbar-meta" id="topbarMeta"></span>
@@ -183,73 +183,116 @@
 
       <!-- ── BUAT NOTULEN ── -->
       <div id="pageBuat" class="page">
+        <!-- Main column: wizard bar + form -->
+        <div class="main-col">
+        <!-- Wizard step indicator -->
+        <div class="wizard-bar" id="wizardBar">
+          <div class="wizard-steps">
+            <div class="wstep active" id="wstep1" onclick="wizardGoTo(1)">
+              <div class="wstep-dot"><span class="wstep-num">1</span><i class="ti ti-check wstep-check"></i></div>
+              <div class="wstep-label">Info Rapat</div>
+            </div>
+            <div class="wstep-line" id="wline1"></div>
+            <div class="wstep" id="wstep2" onclick="wizardGoTo(2)">
+              <div class="wstep-dot"><span class="wstep-num">2</span><i class="ti ti-check wstep-check"></i></div>
+              <div class="wstep-label">Peserta & Agenda</div>
+            </div>
+            <div class="wstep-line" id="wline2"></div>
+            <div class="wstep" id="wstep3" onclick="wizardGoTo(3)">
+              <div class="wstep-dot"><span class="wstep-num">3</span><i class="ti ti-check wstep-check"></i></div>
+              <div class="wstep-label">Keputusan & Tindak Lanjut</div>
+            </div>
+          </div>
+        </div>
+
         <div class="form-scroll" id="formScroll">
           <div id="readonlyBanner" class="readonly-banner" style="display:none;">
             <i class="ti ti-eye" style="font-size:15px;"></i>
             Anda masuk sebagai <strong>Executive</strong> — hanya dapat melihat notulen.
           </div>
 
-          <div class="card">
-            <div class="card-head"><div class="card-head-left"><i class="ti ti-info-circle"></i><span>Informasi rapat</span></div></div>
-            <div class="card-body">
-              <div class="field"><label class="flabel">Judul rapat *</label><input class="finput" id="fJudul" type="text" placeholder="Rapat Koordinasi Proyek Q2 2026"/></div>
-              <div class="field-grid">
-                <div class="field"><label class="flabel">Tanggal *</label><input class="finput" id="fTanggal" type="date"/></div>
-                <div class="field"><label class="flabel">Waktu mulai</label><input class="finput" id="fWaktuMulai" type="time"/></div>
-                <div class="field"><label class="flabel">Waktu selesai</label><input class="finput" id="fWaktuSelesai" type="time"/></div>
-                <div class="field"><label class="flabel">Lokasi / platform</label><input class="finput" id="fLokasi" type="text" placeholder="Ruang Rapat A / Google Meet"/></div>
-                <div class="field"><label class="flabel">Pemimpin rapat</label><input class="finput" id="fPemimpin" type="text" placeholder="Nama pemimpin"/></div>
-                <div class="field"><label class="flabel">Notulis</label><input class="finput" id="fNotulis" type="text" placeholder="Nama notulis"/></div>
-                <div class="field"><label class="flabel">Divisi / departemen</label><input class="finput" id="fDivisi" type="text" placeholder="Product & Engineering"/></div>
+          <!-- ─── Step 1: Info Rapat ─── -->
+          <div class="wstep-panel" id="wpanel1">
+            <div class="card">
+              <div class="card-body">
+                <div class="field"><label class="flabel">Judul rapat *</label><input class="finput" id="fJudul" type="text" placeholder="Rapat Koordinasi Proyek Q2 2026"/></div>
+                <div class="field-grid fg-3">
+                  <div class="field"><label class="flabel">Tanggal *</label><input class="finput" id="fTanggal" type="date"/></div>
+                  <div class="field"><label class="flabel">Waktu mulai</label><input class="finput" id="fWaktuMulai" type="time"/></div>
+                  <div class="field"><label class="flabel">Waktu selesai</label><input class="finput" id="fWaktuSelesai" type="time"/></div>
+                </div>
+                <div class="field-grid">
+                  <div class="field"><label class="flabel">Lokasi / platform</label><input class="finput" id="fLokasi" type="text" placeholder="Ruang Rapat A / Google Meet"/></div>
+                  <div class="field"><label class="flabel">Divisi / departemen</label><input class="finput" id="fDivisi" type="text" placeholder="Product & Engineering"/></div>
+                  <div class="field"><label class="flabel">Pemimpin rapat</label><input class="finput" id="fPemimpin" type="text" placeholder="Nama pemimpin"/></div>
+                  <div class="field"><label class="flabel">Notulis</label><input class="finput" id="fNotulis" type="text" placeholder="Nama notulis"/></div>
+                </div>
               </div>
+            </div>
+            <div class="wizard-nav">
+              <div></div>
+              <button class="tbtn tbtn-primary" onclick="wizardNext()">Selanjutnya <i class="ti ti-arrow-right"></i></button>
             </div>
           </div>
 
-          <div class="card">
-            <div class="card-head"><div class="card-head-left"><i class="ti ti-users"></i><span>Daftar peserta</span></div></div>
-            <div class="card-body">
-              <div class="field"><label class="flabel">Peserta (pisahkan dengan koma)</label>
-                <textarea class="ftextarea" id="fPeserta" placeholder="Ahmad Rasyid (Pemimpin), Siti Rahayu, Budi Santoso, ..."></textarea>
+          <!-- ─── Step 2: Peserta & Agenda ─── -->
+          <div class="wstep-panel" id="wpanel2" style="display:none">
+            <div class="card">
+              <div class="card-head"><div class="card-head-left"><i class="ti ti-users"></i><span>Daftar peserta</span></div></div>
+              <div class="card-body">
+                <div class="field"><label class="flabel">Peserta (pisahkan dengan koma)</label>
+                  <textarea class="ftextarea" id="fPeserta" placeholder="Ahmad Rasyid (Pemimpin), Siti Rahayu, Budi Santoso, ..."></textarea>
+                </div>
               </div>
+            </div>
+            <div class="card">
+              <div class="card-head"><div class="card-head-left"><i class="ti ti-list-check"></i><span>Agenda pembahasan</span></div></div>
+              <div class="card-body">
+                <div class="agenda-list" id="agendaList"></div>
+                <div class="add-row" id="addAgendaBtn" onclick="addAgenda()"><i class="ti ti-plus"></i> Tambah agenda</div>
+              </div>
+            </div>
+            <div class="wizard-nav">
+              <button class="tbtn" onclick="wizardPrev()"><i class="ti ti-arrow-left"></i> Sebelumnya</button>
+              <button class="tbtn tbtn-primary" onclick="wizardNext()">Selanjutnya <i class="ti ti-arrow-right"></i></button>
             </div>
           </div>
 
-          <div class="card">
-            <div class="card-head"><div class="card-head-left"><i class="ti ti-list-check"></i><span>Agenda pembahasan</span></div></div>
-            <div class="card-body">
-              <div class="agenda-list" id="agendaList"></div>
-              <div class="add-row" id="addAgendaBtn" onclick="addAgenda()"><i class="ti ti-plus"></i> Tambah agenda</div>
-            </div>
-          </div>
-
-          <div class="card">
-            <div class="card-head"><div class="card-head-left"><i class="ti ti-bulb"></i><span>Poin keputusan & catatan</span></div></div>
-            <div class="card-body">
-              <div class="field"><label class="flabel">Keputusan yang disepakati</label>
-                <textarea class="ftextarea" id="fKeputusan" style="min-height:90px;" placeholder="• Keputusan pertama&#10;• Keputusan kedua"></textarea>
-              </div>
-              <div class="field"><label class="flabel">Catatan tambahan</label>
-                <textarea class="ftextarea" id="fCatatan" placeholder="Catatan lain..."></textarea>
+          <!-- ─── Step 3: Keputusan & Tindak Lanjut ─── -->
+          <div class="wstep-panel" id="wpanel3" style="display:none">
+            <div class="card">
+              <div class="card-head"><div class="card-head-left"><i class="ti ti-bulb"></i><span>Poin keputusan &amp; catatan</span></div></div>
+              <div class="card-body">
+                <div class="field"><label class="flabel">Keputusan yang disepakati</label>
+                  <textarea class="ftextarea" id="fKeputusan" style="min-height:90px;" placeholder="• Keputusan pertama&#10;• Keputusan kedua"></textarea>
+                </div>
+                <div class="field"><label class="flabel">Catatan tambahan</label>
+                  <textarea class="ftextarea" id="fCatatan" placeholder="Catatan lain..."></textarea>
+                </div>
               </div>
             </div>
-          </div>
-
-          <div class="card">
-            <div class="card-head">
-              <div class="card-head-left"><i class="ti ti-checkbox"></i><span>Tindak lanjut (action items)</span></div>
-              <span class="card-meta" id="actionMeta">0 item</span>
-            </div>
-            <div class="card-body" style="padding:0;">
-              <div class="action-table-wrap"><table class="action-table">
-                <thead><tr><th>Tugas</th><th>PIC</th><th>Tenggat</th><th>Status</th><th></th></tr></thead>
-                <tbody id="actionBody"></tbody>
-              </table></div>
-              <div style="padding:10px 18px;">
-                <div class="add-row" id="addActionBtn" onclick="addAction()"><i class="ti ti-plus"></i> Tambah action item</div>
+            <div class="card">
+              <div class="card-head">
+                <div class="card-head-left"><i class="ti ti-checkbox"></i><span>Tindak lanjut (action items)</span></div>
+                <span class="card-meta" id="actionMeta">0 item</span>
               </div>
+              <div class="card-body" style="padding:0;">
+                <div class="action-table-wrap"><table class="action-table">
+                  <thead><tr><th>Tugas</th><th>PIC</th><th>Tenggat</th><th>Status</th><th></th></tr></thead>
+                  <tbody id="actionBody"></tbody>
+                </table></div>
+                <div style="padding:10px 18px;">
+                  <div class="add-row" id="addActionBtn" onclick="addAction()"><i class="ti ti-plus"></i> Tambah action item</div>
+                </div>
+              </div>
+            </div>
+            <div class="wizard-nav">
+              <button class="tbtn" onclick="wizardPrev()"><i class="ti ti-arrow-left"></i> Sebelumnya</button>
+              <button class="tbtn tbtn-success" onclick="simpanNotulen()"><i class="ti ti-device-floppy"></i> Simpan Draft</button>
             </div>
           </div>
         </div>
+        </div><!-- end .main-col -->
 
         <!-- RIGHT PANEL -->
         <aside class="right-panel" id="rightPanel">
