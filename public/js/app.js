@@ -1243,12 +1243,25 @@ async function downloadPDF(n) {
     ? `<div style="text-align:center;margin-top:28px;padding-top:12px;border-top:1px solid #f3f4f6;font-size:9px;color:#9ca3af;">Dokumen ini dikirim secara elektronik melalui Ailo Notulen pada ${new Date(n.sentAt).toLocaleString('id-ID',{day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div>` : '';
 
   /* ── ASSEMBLE & RENDER ─────────────────────── */
-  const pdfString = `
-    <div style="width:794px;padding:40px 50px 40px;background:#ffffff;box-sizing:border-box;font-family:'Open Sans',Arial,sans-serif;color:#111827;line-height:1.5;">
+  const pdfInner = `
+    <div style="width:794px;padding:40px 50px 40px;background:#ffffff;box-sizing:border-box;font-family:Arial,sans-serif;color:#111827;line-height:1.5;">
       ${KOP}${TITLE}${INFO}${BODY}${ACTION}${SIGN}${sentInfo}
     </div>`;
 
   showToast('Menyiapkan PDF...', 'info');
+
+  /* Overlay covers pdfEl from user view; html2canvas captures pdfEl directly regardless */
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:#fff;z-index:100001;display:flex;align-items:center;justify-content:center;';
+  overlay.innerHTML = '<div style="color:#0d9488;font-size:14px;font-family:Arial,sans-serif;">Menyiapkan PDF…</div>';
+  document.body.appendChild(overlay);
+
+  /* pdfEl must be on screen (top:0 left:0) so html2canvas can capture it; overlay hides it from user */
+  const pdfEl = document.createElement('div');
+  pdfEl.style.cssText = 'position:fixed;top:0;left:0;width:794px;background:#fff;z-index:100000;';
+  pdfEl.innerHTML = pdfInner;
+  document.body.appendChild(pdfEl);
+
   try {
     await html2pdf().set({
       margin: 0,
@@ -1256,10 +1269,13 @@ async function downloadPDF(n) {
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff', windowWidth: 794 },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    }).from(pdfString).save();
+    }).from(pdfEl).save();
     showToast('PDF berhasil diunduh');
   } catch(e) {
     showToast('Gagal membuat PDF: '+e.message, 'error');
+  } finally {
+    document.body.removeChild(pdfEl);
+    document.body.removeChild(overlay);
   }
 }
 
