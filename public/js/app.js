@@ -8,6 +8,8 @@ let currentUser = null;
 let token = localStorage.getItem('ailo_token') || null;
 let sidebarOpen = true;
 let resetTokenUrl = null;
+let _pdfNotulen = null;
+let _kopCache = {};
 
 // State: notulen form
 let st = {
@@ -55,6 +57,7 @@ function bootApp() {
   setToday();
   loadRiwayat();
   loadContacts();
+  fetchKop();
   showPage('buat');
   handleResize();
   window.addEventListener('resize', handleResize);
@@ -545,6 +548,7 @@ async function openDetail(id) {
 }
 
 function renderDetail(n) {
+  _pdfNotulen = n;
   const canEdit = currentUser?.role !== 'executive';
   const isSent = n.status === 'sent';
   const fmtDate = (d, opts) => new Date(d).toLocaleDateString('id-ID', opts);
@@ -623,28 +627,31 @@ function renderDetail(n) {
 
   /* ── RENDER ── */
   document.getElementById('detailContent').innerHTML = `
-    <div class="detail-topbar">
-      <button class="tbtn" onclick="showPage('riwayat')"><i class="ti ti-arrow-left"></i><span class="btn-text"> Riwayat</span></button>
-      <div style="display:flex;gap:8px">
-        ${canEdit ? `<button class="tbtn" onclick="editNotulen('${n._id}')"><i class="ti ti-pencil"></i><span class="btn-text"> Edit</span></button>` : ''}
-        ${canEdit && !isSent ? `<button class="tbtn tbtn-primary" onclick="openDetailSend('${n._id}')"><i class="ti ti-send"></i><span class="btn-text"> Kirim</span></button>` : ''}
-        ${canEdit ? `<button class="tbtn tbtn-danger" title="Hapus" onclick="confirmDeleteNotulen('${n._id}','${esc(n.judul)}')"><i class="ti ti-trash"></i></button>` : ''}
+    <div class="detail-inner">
+      <div class="detail-topbar">
+        <button class="tbtn" onclick="showPage('riwayat')"><i class="ti ti-arrow-left"></i><span class="btn-text"> Riwayat</span></button>
+        <div style="display:flex;gap:8px">
+          <button class="tbtn" onclick="downloadNotulenPDF()" title="Unduh PDF"><i class="ti ti-file-download"></i><span class="btn-text"> PDF</span></button>
+          ${canEdit ? `<button class="tbtn" onclick="editNotulen('${n._id}')"><i class="ti ti-pencil"></i><span class="btn-text"> Edit</span></button>` : ''}
+          ${canEdit && !isSent ? `<button class="tbtn tbtn-primary" onclick="openDetailSend('${n._id}')"><i class="ti ti-send"></i><span class="btn-text"> Kirim</span></button>` : ''}
+          ${canEdit ? `<button class="tbtn tbtn-danger" title="Hapus" onclick="confirmDeleteNotulen('${n._id}','${esc(n.judul)}')"><i class="ti ti-trash"></i></button>` : ''}
+        </div>
       </div>
-    </div>
 
-    <div class="dcard dmain-card">
-      <div class="dmain-top">
-        ${isSent ? '<span class="dstatus-sent"><i class="ti ti-circle-check"></i> Terkirim</span>' : '<span class="dstatus-draft"><i class="ti ti-file"></i> Draft</span>'}
-        ${n.sentAt ? `<span class="dstatus-time">Dikirim ${fmtDt(n.sentAt)}</span>` : ''}
+      <div class="dcard dmain-card">
+        <div class="dmain-top">
+          ${isSent ? '<span class="dstatus-sent"><i class="ti ti-circle-check"></i> Terkirim</span>' : '<span class="dstatus-draft"><i class="ti ti-file"></i> Draft</span>'}
+          ${n.sentAt ? `<span class="dstatus-time">Dikirim ${fmtDt(n.sentAt)}</span>` : ''}
+        </div>
+        <h1 class="dmain-title">${esc(n.judul)}</h1>
+        <table class="dinf-table"><tbody>${infoRows}</tbody></table>
+        ${bodySections ? `<hr class="dsep">${bodySections}` : ''}
       </div>
-      <h1 class="dmain-title">${esc(n.judul)}</h1>
-      <table class="dinf-table"><tbody>${infoRows}</tbody></table>
-      ${bodySections ? `<hr class="dsep">${bodySections}` : ''}
-    </div>
 
-    ${actionHtml}
-    ${penerimaHtml}
-    ${logHtml}
+      ${actionHtml}
+      ${penerimaHtml}
+      ${logHtml}
+    </div>
   `;
 }
 
@@ -812,12 +819,37 @@ async function loadUsers() {
   try {
     const r = await api('GET','/api/auth/users');
     st.allUsers = r.data || [];
+    const searchEl = document.getElementById('searchPengguna');
+    if (searchEl) searchEl.value = '';
+    renderUserSummary(st.allUsers);
     renderUsers(st.allUsers);
   } catch {}
 }
+function filterUsers() {
+  const q = (document.getElementById('searchPengguna')?.value || '').toLowerCase();
+  const filtered = q
+    ? st.allUsers.filter(u => u.nama.toLowerCase().includes(q) || u.email.toLowerCase().includes(q))
+    : st.allUsers;
+  renderUsers(filtered);
+}
+function renderUserSummary(list) {
+  const el = document.getElementById('penggunaSummary');
+  if (!el) return;
+  const total = list.length;
+  const aktif = list.filter(u=>u.aktif).length;
+  const byRole = { admin:0, executive:0, user:0 };
+  list.forEach(u => { if (byRole[u.role] !== undefined) byRole[u.role]++; });
+  el.innerHTML = `
+    <div class="psum-card"><div class="psum-n">${total}</div><div class="psum-l">Total</div></div>
+    <div class="psum-card psum-on"><div class="psum-n">${aktif}</div><div class="psum-l">Aktif</div></div>
+    <div class="psum-card psum-off"><div class="psum-n">${total-aktif}</div><div class="psum-l">Nonaktif</div></div>
+    <div class="psum-card"><div class="psum-n">${byRole.admin}</div><div class="psum-l">Admin</div></div>
+    <div class="psum-card"><div class="psum-n">${byRole.executive}</div><div class="psum-l">Executive</div></div>
+    <div class="psum-card"><div class="psum-n">${byRole.user}</div><div class="psum-l">User</div></div>`;
+}
 function renderUsers(list) {
   const body = document.getElementById('penggunaBody');
-  if (!list.length) { body.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-3);">Belum ada pengguna</td></tr>`; return; }
+  if (!list.length) { body.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-3);">Tidak ada pengguna ditemukan</td></tr>`; return; }
   body.innerHTML = list.map(u => {
     const ini = u.nama.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
     const ll = u.lastLogin ? new Date(u.lastLogin).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}) : '—';
@@ -895,6 +927,340 @@ function loadProfilePage() {
   sv('pNama', u.nama||''); sv('pJabatan', u.jabatan||''); sv('pDivisi', u.divisi||''); sv('pBio', u.bio||'');
   document.getElementById('emailSaatIni').textContent = u.email;
   sv('emailBaru',''); sv('emailPw',''); sv('pwLama',''); sv('pwBaru',''); sv('pwKonfirmasi','');
+  updateProfilePreview();
+  loadKopSettingsUI();
+}
+
+function updateProfilePreview() {
+  const nama = v('pNama') || currentUser?.nama || '—';
+  const jabatan = v('pJabatan') || '';
+  const divisi = v('pDivisi') || '';
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  set('pInfoNama', nama);
+  set('pInfoJabatan', jabatan || 'Jabatan belum diisi');
+  set('pInfoDivisi', divisi || 'Divisi belum diisi');
+}
+
+/* ─────────────────────────────────────
+   KOP SURAT & PDF
+───────────────────────────────────── */
+function getKop() { return _kopCache; }
+
+async function fetchKop() {
+  try {
+    const r = await api('GET', '/api/settings/kop');
+    if (r.ok) _kopCache = r.data || {};
+  } catch {}
+}
+
+async function loadKopSettingsUI() {
+  // Show/hide kop card based on role
+  const kopCard = document.getElementById('kopSuratCard');
+  if (kopCard) kopCard.style.display = currentUser?.role === 'admin' ? '' : 'none';
+  if (currentUser?.role !== 'admin') return;
+
+  await fetchKop();
+  const kop = _kopCache;
+  window._kopLogoTemp = undefined;
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
+  set('kopNamaOrg', kop.namaOrg); set('kopTagline', kop.tagline);
+  set('kopAlamat', kop.alamat); set('kopTelepon', kop.telepon);
+  set('kopEmail', kop.email); set('kopKota', kop.kota);
+  const thumb = document.getElementById('kopLogoPreview');
+  const removeBtn = document.getElementById('kopLogoRemoveBtn');
+  if (kop.logo && thumb) {
+    thumb.innerHTML = `<img src="${kop.logo}" style="max-height:44px;max-width:72px;object-fit:contain;"/>`;
+    if (removeBtn) removeBtn.style.display = '';
+  } else {
+    if (thumb) thumb.innerHTML = '';
+    if (removeBtn) removeBtn.style.display = 'none';
+  }
+  updateKopPreview();
+}
+
+function handleKopLogo(input) {
+  const file = input.files[0];
+  if (!file) return;
+  new Promise((res, rej) => {
+    const reader = new FileReader();
+    reader.onload = e => res(e.target.result);
+    reader.onerror = rej;
+    reader.readAsDataURL(file);
+  }).then(data => {
+    window._kopLogoTemp = data;
+    const thumb = document.getElementById('kopLogoPreview');
+    const removeBtn = document.getElementById('kopLogoRemoveBtn');
+    if (thumb) thumb.innerHTML = `<img src="${data}" style="max-height:44px;max-width:72px;object-fit:contain;"/>`;
+    if (removeBtn) removeBtn.style.display = '';
+    updateKopPreview();
+  });
+}
+
+function removeKopLogo() {
+  window._kopLogoTemp = null;
+  const thumb = document.getElementById('kopLogoPreview');
+  const removeBtn = document.getElementById('kopLogoRemoveBtn');
+  const fileInput = document.getElementById('kopLogoFile');
+  if (thumb) thumb.innerHTML = '';
+  if (removeBtn) removeBtn.style.display = 'none';
+  if (fileInput) fileInput.value = '';
+  const kop = getKop(); kop.logo = null;
+  localStorage.setItem('ailoKop', JSON.stringify(kop));
+  updateKopPreview();
+}
+
+function updateKopPreview() {
+  const v = id => document.getElementById(id)?.value || '';
+  const nama = v('kopNamaOrg'); const tagline = v('kopTagline');
+  const alamat = v('kopAlamat'); const telepon = v('kopTelepon'); const email = v('kopEmail');
+  const kop = getKop();
+  const logo = window._kopLogoTemp !== undefined ? window._kopLogoTemp : kop.logo;
+
+  const kpNama = document.getElementById('kpNama');
+  const kpTagline = document.getElementById('kpTagline');
+  const kpInfo = document.getElementById('kpInfo');
+  const kpLogo = document.getElementById('kpLogo');
+  if (!kpNama) return;
+
+  kpNama.textContent = nama || 'Nama Organisasi';
+  kpTagline.textContent = tagline;
+  kpTagline.style.display = tagline ? '' : 'none';
+  const infoItems = [alamat, telepon, email].filter(Boolean);
+  kpInfo.textContent = infoItems.join(' · ');
+  kpInfo.style.display = infoItems.length ? '' : 'none';
+
+  if (logo) {
+    kpLogo.innerHTML = `<img src="${logo}" style="height:48px;object-fit:contain;"/>`;
+  } else {
+    const init = (nama || 'A').charAt(0).toUpperCase();
+    kpLogo.innerHTML = `<div style="width:48px;height:48px;border-radius:8px;background:#0d9488;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:22px;">${init}</div>`;
+  }
+}
+
+async function saveKopSettings() {
+  const val = id => document.getElementById(id)?.value.trim() || '';
+  const kop = { ..._kopCache };
+  kop.namaOrg = val('kopNamaOrg'); kop.tagline = val('kopTagline');
+  kop.alamat = val('kopAlamat'); kop.telepon = val('kopTelepon');
+  kop.email = val('kopEmail'); kop.kota = val('kopKota');
+  if (window._kopLogoTemp !== undefined) { kop.logo = window._kopLogoTemp; window._kopLogoTemp = undefined; }
+  try {
+    const r = await api('PUT', '/api/settings/kop', kop);
+    if (!r.ok) throw new Error(r.message);
+    _kopCache = kop;
+    showToast('Kop surat disimpan');
+  } catch (e) { showToast('Gagal menyimpan: '+e.message, 'error'); }
+}
+
+function downloadNotulenPDF() {
+  if (!_pdfNotulen) return;
+  downloadPDF(_pdfNotulen);
+}
+
+async function downloadPDF(n) {
+  if (typeof html2pdf === 'undefined') { showToast('Library PDF belum siap, coba refresh','error'); return; }
+  const kop = getKop();
+  const fmt  = (d, opts) => new Date(d).toLocaleDateString('id-ID', opts);
+  const fmtDate = (d, opts) => fmt(d, opts);
+  const fmtLong  = d => fmt(d, {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+  const e2 = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+  /* ── helpers ─────────────────────────────────── */
+  const isSent   = n.status === 'sent';
+  const kota     = kop.kota || 'Bandung';
+  const tglSign  = n.tanggal ? fmtDate(n.tanggal,{day:'numeric',month:'long',year:'numeric'}) : new Date().toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
+  const timeStr  = n.waktuMulai ? [n.waktuMulai,n.waktuSelesai].filter(Boolean).join(' – ')+' WIB' : null;
+
+  /* shared style strings */
+  const TH = `border:1px solid #d1d5db;padding:7px 10px;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#374151;background:#f9fafb;text-align:left;`;
+  const TD = `border:1px solid #e5e7eb;padding:7px 10px;font-size:11px;color:#111827;vertical-align:top;`;
+  const SEC_HDR = (no, label) =>
+    `<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid #e5e7eb;">
+       <div style="width:22px;height:22px;border-radius:50%;background:#0d9488;color:#fff;font-size:10px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">${no}</div>
+       <span style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#0d9488;">${label}</span>
+     </div>`;
+
+  /* ── KOP SURAT ─────────────────────────────── */
+  const logoHtml = kop.logo
+    ? `<img src="${kop.logo}" style="height:64px;max-width:100px;object-fit:contain;display:block;"/>`
+    : `<div style="width:60px;height:60px;border-radius:10px;background:#0d9488;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:26px;">${(kop.namaOrg||'A').charAt(0).toUpperCase()}</div>`;
+  const contactLine = [kop.alamat, kop.telepon ? '&#128222; '+e2(kop.telepon) : '', kop.email ? '&#9993; '+e2(kop.email) : ''].filter(Boolean).join('&emsp;|&emsp;');
+  const KOP = `
+    <div style="display:flex;align-items:center;gap:18px;padding-bottom:14px;margin-bottom:0;">
+      ${logoHtml}
+      <div style="flex:1;border-left:1px solid #e5e7eb;padding-left:18px;">
+        <div style="font-size:20px;font-weight:700;color:#134e4a;letter-spacing:-.01em;line-height:1.2;">${e2(kop.namaOrg||'Notulen')}</div>
+        ${kop.tagline?`<div style="font-size:11px;color:#6b7280;margin-top:3px;">${e2(kop.tagline)}</div>`:''}
+        ${contactLine?`<div style="font-size:10px;color:#9ca3af;margin-top:6px;">${contactLine}</div>`:''}
+      </div>
+    </div>
+    <div style="height:3px;background:linear-gradient(to right,#0d9488,#14b8a6,#99f6e4);margin-bottom:20px;border-radius:2px;"></div>`;
+
+  /* ── DOCUMENT TITLE ────────────────────────── */
+  const statusBadge = isSent
+    ? `<span style="display:inline-block;background:#dcfce7;color:#15803d;border:1px solid #bbf7d0;border-radius:20px;padding:3px 14px;font-size:10px;font-weight:700;letter-spacing:.04em;">&#10003; TERKIRIM</span>`
+    : `<span style="display:inline-block;background:#fef9c3;color:#854d0e;border:1px solid #fde68a;border-radius:20px;padding:3px 14px;font-size:10px;font-weight:700;letter-spacing:.04em;">DRAFT</span>`;
+  const TITLE = `
+    <div style="text-align:center;margin-bottom:20px;padding:16px 20px;background:#f0fdf4;border-radius:8px;border:1px solid #d1fae5;">
+      <div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#0d9488;margin-bottom:6px;">Notulen Rapat</div>
+      <div style="font-size:22px;font-weight:700;color:#111827;line-height:1.3;margin-bottom:8px;">${e2(n.judul)}</div>
+      ${statusBadge}
+    </div>`;
+
+  /* ── INFORMASI RAPAT ────────────────────────── */
+  const infoRows = [
+    ['Hari / Tanggal', n.tanggal ? fmtLong(n.tanggal) : null],
+    ['Waktu',          timeStr],
+    ['Lokasi',         n.lokasi],
+    ['Pemimpin Rapat', n.pemimpinRapat],
+    ['Notulis',        n.notulis],
+    ['Divisi / Unit',  n.divisi],
+  ].filter(([,v])=>v);
+
+  const INFO = infoRows.length ? `
+    <table style="width:100%;border-collapse:collapse;margin-bottom:20px;">
+      <thead>
+        <tr><th colspan="2" style="${TH}background:#f0fdf4;color:#0d9488;border-color:#d1fae5;">Informasi Rapat</th></tr>
+      </thead>
+      <tbody>
+        ${infoRows.map(([k,v],i)=>`<tr style="${i%2===0?'background:#fafafa;':'background:#fff;'}">
+          <td style="${TD}width:130px;color:#6b7280;font-weight:500;white-space:nowrap;">${k}</td>
+          <td style="${TD}font-weight:500;">${e2(v)}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>` : '';
+
+  /* ── BODY SECTIONS ─────────────────────────── */
+  let secNo = 1;
+  const bodySecs = [];
+
+  const peserta = (n.peserta||'').split(',').map(p=>p.trim()).filter(Boolean);
+  if (peserta.length) {
+    const rows = peserta.map((p,i)=>`<tr style="${i%2===0?'background:#fafafa;':''}">
+      <td style="${TD}width:28px;color:#6b7280;text-align:center;">${i+1}</td>
+      <td style="${TD}">${e2(p)}</td>
+    </tr>`).join('');
+    bodySecs.push(`<div style="margin-bottom:18px;">
+      ${SEC_HDR(secNo++,'Peserta Rapat')}
+      <table style="width:100%;border-collapse:collapse;">
+        <thead><tr>
+          <th style="${TH}width:28px;text-align:center;">No.</th>
+          <th style="${TH}">Nama</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`);
+  }
+
+  const agenda = (n.agenda||[]).filter(a=>a.trim());
+  if (agenda.length) {
+    const rows = agenda.map((a,i)=>`<tr style="${i%2===0?'background:#fafafa;':''}">
+      <td style="${TD}width:28px;color:#6b7280;text-align:center;">${i+1}</td>
+      <td style="${TD}line-height:1.6;">${e2(a)}</td>
+    </tr>`).join('');
+    bodySecs.push(`<div style="margin-bottom:18px;">
+      ${SEC_HDR(secNo++,'Agenda Pembahasan')}
+      <table style="width:100%;border-collapse:collapse;">
+        <thead><tr>
+          <th style="${TH}width:28px;text-align:center;">No.</th>
+          <th style="${TH}">Agenda</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`);
+  }
+
+  if ((n.keputusan||'').trim()) {
+    bodySecs.push(`<div style="margin-bottom:18px;">
+      ${SEC_HDR(secNo++,'Keputusan yang Disepakati')}
+      <div style="border:1px solid #d1fae5;border-left:4px solid #0d9488;border-radius:0 6px 6px 0;padding:12px 16px;background:#f0fdf4;font-size:12px;line-height:1.75;color:#111827;">${e2(n.keputusan).replace(/\n/g,'<br>')}</div>
+    </div>`);
+  }
+
+  if ((n.catatan||'').trim()) {
+    bodySecs.push(`<div style="margin-bottom:18px;">
+      ${SEC_HDR(secNo++,'Catatan Tambahan')}
+      <div style="border:1px solid #e5e7eb;border-left:4px solid #9ca3af;border-radius:0 6px 6px 0;padding:12px 16px;background:#f9fafb;font-size:12px;line-height:1.75;color:#374151;">${e2(n.catatan).replace(/\n/g,'<br>')}</div>
+    </div>`);
+  }
+
+  const BODY = bodySecs.join('');
+
+  /* ── TINDAK LANJUT ─────────────────────────── */
+  let ACTION = '';
+  if ((n.actionItems||[]).length) {
+    const rows = n.actionItems.map((a,i) => {
+      const d   = a.tenggat ? fmtDate(a.tenggat,{day:'numeric',month:'short',year:'numeric'}) : '—';
+      const isDone = a.status === 'done';
+      const badge  = isDone
+        ? `<span style="display:inline-block;background:#dcfce7;color:#15803d;border:1px solid #bbf7d0;border-radius:4px;padding:1px 8px;font-size:10px;font-weight:600;">&#10003; Selesai</span>`
+        : `<span style="display:inline-block;background:#fef9c3;color:#854d0e;border:1px solid #fde68a;border-radius:4px;padding:1px 8px;font-size:10px;font-weight:600;">Terbuka</span>`;
+      return `<tr style="${i%2===0?'background:#fafafa;':''}">
+        <td style="${TD}width:24px;text-align:center;color:#6b7280;">${i+1}</td>
+        <td style="${TD}line-height:1.5;">${e2(a.tugas)}</td>
+        <td style="${TD}white-space:nowrap;">${e2(a.pic)}</td>
+        <td style="${TD}white-space:nowrap;">${d}</td>
+        <td style="${TD}">${badge}</td>
+      </tr>`;
+    }).join('');
+    ACTION = `<div style="margin-bottom:20px;">
+      ${SEC_HDR(secNo++,'Tindak Lanjut')}
+      <table style="width:100%;border-collapse:collapse;">
+        <thead><tr>
+          <th style="${TH}width:24px;text-align:center;">No.</th>
+          <th style="${TH}">Tugas / Action Item</th>
+          <th style="${TH}white-space:nowrap;">PIC</th>
+          <th style="${TH}white-space:nowrap;">Tenggat</th>
+          <th style="${TH}">Status</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+  }
+
+  /* ── SIGNATURE ─────────────────────────────── */
+  const SIGN = `
+    <div style="margin-top:32px;padding-top:16px;border-top:2px solid #e5e7eb;">
+      <div style="text-align:right;font-size:11px;color:#6b7280;margin-bottom:32px;">${e2(kota)}, ${tglSign}</div>
+      <div style="display:flex;justify-content:space-between;gap:20px;">
+        <div style="flex:1;text-align:center;max-width:180px;">
+          <div style="font-size:11px;color:#374151;margin-bottom:60px;">Notulis,</div>
+          <div style="border-top:1px solid #374151;padding-top:5px;">
+            <div style="font-size:12px;font-weight:700;color:#111827;">${e2(n.notulis||'( ................................ )')}</div>
+          </div>
+        </div>
+        <div style="flex:1;text-align:center;max-width:180px;margin-left:auto;">
+          <div style="font-size:11px;color:#374151;margin-bottom:60px;">Mengetahui,<br>Pemimpin Rapat,</div>
+          <div style="border-top:1px solid #374151;padding-top:5px;">
+            <div style="font-size:12px;font-weight:700;color:#111827;">${e2(n.pemimpinRapat||'( ................................ )')}</div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+
+  /* ── FOOTER ────────────────────────────────── */
+  const sentInfo = isSent && n.sentAt
+    ? `<div style="text-align:center;margin-top:28px;padding-top:12px;border-top:1px solid #f3f4f6;font-size:9px;color:#9ca3af;">Dokumen ini dikirim secara elektronik melalui Ailo Notulen pada ${new Date(n.sentAt).toLocaleString('id-ID',{day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div>` : '';
+
+  /* ── ASSEMBLE & RENDER ─────────────────────── */
+  const pdfString = `
+    <div style="width:794px;padding:40px 50px 40px;background:#ffffff;box-sizing:border-box;font-family:'Open Sans',Arial,sans-serif;color:#111827;line-height:1.5;">
+      ${KOP}${TITLE}${INFO}${BODY}${ACTION}${SIGN}${sentInfo}
+    </div>`;
+
+  showToast('Menyiapkan PDF...', 'info');
+  try {
+    await html2pdf().set({
+      margin: 0,
+      filename: `Notulen - ${n.judul.replace(/[/\\?%*:|"<>]/g,'_')}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff', windowWidth: 794 },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    }).from(pdfString).save();
+    showToast('PDF berhasil diunduh');
+  } catch(e) {
+    showToast('Gagal membuat PDF: '+e.message, 'error');
+  }
 }
 
 function toggleSettingsSection(id) {

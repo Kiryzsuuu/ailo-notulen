@@ -363,6 +363,8 @@
             <h2>Kelola Pengguna</h2>
             <button class="tbtn tbtn-primary" onclick="openUserModal()"><i class="ti ti-user-plus"></i><span class="btn-text"> Tambah</span></button>
           </div>
+          <div id="penggunaSummary" class="pengguna-summary"></div>
+          <div class="search-bar"><i class="ti ti-search"></i><input type="text" id="searchPengguna" placeholder="Cari nama atau email..." oninput="filterUsers()"/></div>
           <div class="pengguna-table-wrap">
             <table class="pengguna-table">
               <thead><tr><th>Nama</th><th>Email</th><th>Role</th><th>Jabatan / Divisi</th><th>Status</th><th>Login terakhir</th><th></th></tr></thead>
@@ -374,88 +376,135 @@
 
       <!-- ── MY PROFILE ── -->
       <div id="pageProfil" class="page">
-        <div class="page-content" style="max-width:600px;margin:0 auto;">
+        <div class="page-content">
+          <div class="profile-layout">
 
-          <!-- Profile header card -->
-          <div class="profile-hero">
-            <div class="profile-av-big" id="profileAvBig">A</div>
-            <div class="profile-hero-info">
-              <div class="profile-hero-name" id="profileHeroName">—</div>
-              <div class="profile-hero-meta" id="profileHeroMeta">—</div>
-              <div id="profileHeroBadge"></div>
-            </div>
-          </div>
-
-          <!-- Profil -->
-          <div class="card">
-            <div class="card-head"><div class="card-head-left"><i class="ti ti-id-badge"></i><span>Profil</span></div></div>
-            <div class="card-body">
-              <div class="field-grid">
-                <div class="field"><label class="flabel">Nama lengkap</label><input class="finput" id="pNama" type="text" placeholder="Nama Anda"/></div>
-                <div class="field"><label class="flabel">Jabatan</label><input class="finput" id="pJabatan" type="text" placeholder="Jabatan Anda"/></div>
-                <div class="field"><label class="flabel">Divisi</label><input class="finput" id="pDivisi" type="text" placeholder="Divisi"/></div>
-                <div class="field" style="grid-column:1/-1;"><label class="flabel">Bio</label><textarea class="ftextarea" id="pBio" placeholder="Tulis sedikit tentang Anda..." style="min-height:60px;"></textarea></div>
-              </div>
-              <button class="tbtn tbtn-primary" style="align-self:flex-start;" onclick="simpanProfil()"><i class="ti ti-check"></i> Simpan Profil</button>
-            </div>
-          </div>
-
-          <!-- Pengaturan akun -->
-          <div class="card">
-            <div class="card-head"><div class="card-head-left"><i class="ti ti-settings"></i><span>Pengaturan Akun</span></div></div>
-            <div class="card-body">
-
-              <!-- Edit email -->
-              <div class="settings-section">
-                <div class="settings-section-head" onclick="toggleSettingsSection('sectionEmail')">
-                  <div style="display:flex;align-items:center;gap:8px;"><i class="ti ti-mail" style="color:var(--teal-500);font-size:16px;"></i><span style="font-size:13px;font-weight:500;">Ubah Email</span></div>
-                  <i class="ti ti-chevron-down settings-chevron" id="chevronEmail"></i>
+            <!-- LEFT: hero + identity -->
+            <div class="profile-left">
+              <div class="profile-hero">
+                <div class="profile-av-big" id="profileAvBig">A</div>
+                <div class="profile-hero-info">
+                  <div class="profile-hero-name" id="profileHeroName">—</div>
+                  <div class="profile-hero-meta" id="profileHeroMeta">—</div>
+                  <div id="profileHeroBadge"></div>
                 </div>
-                <div class="settings-section-body" id="sectionEmail">
-                  <div class="field"><label class="flabel">Email saat ini</label><div class="finput-static" id="emailSaatIni">—</div></div>
-                  <div class="field"><label class="flabel">Email baru</label><input class="finput" id="emailBaru" type="email" placeholder="email-baru@contoh.com"/></div>
-                  <div class="field"><label class="flabel">Konfirmasi dengan password</label>
-                    <div class="inp-icon"><i class="ti ti-lock"></i><input class="finput" id="emailPw" type="password" placeholder="Password Anda"/><i class="ti ti-eye inp-eye" onclick="togglePw('emailPw',this)"></i></div>
+              </div>
+              <div class="card profile-info-card">
+                <div class="card-body" style="gap:8px;">
+                  <div class="pinfo-row"><i class="ti ti-id-badge"></i><span id="pInfoNama">—</span></div>
+                  <div class="pinfo-row"><i class="ti ti-briefcase"></i><span id="pInfoJabatan" style="color:var(--text-3);">—</span></div>
+                  <div class="pinfo-row"><i class="ti ti-building"></i><span id="pInfoDivisi" style="color:var(--text-3);">—</span></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- RIGHT: cards -->
+            <div class="profile-right">
+
+              <!-- Profil -->
+              <div class="card">
+                <div class="card-head"><div class="card-head-left"><i class="ti ti-id-badge"></i><span>Profil</span></div></div>
+                <div class="card-body">
+                  <div class="field-grid">
+                    <div class="field"><label class="flabel">Nama lengkap</label><input class="finput" id="pNama" type="text" placeholder="Nama Anda" oninput="updateProfilePreview()"/></div>
+                    <div class="field"><label class="flabel">Jabatan</label><input class="finput" id="pJabatan" type="text" placeholder="Jabatan Anda" oninput="updateProfilePreview()"/></div>
+                    <div class="field"><label class="flabel">Divisi</label><input class="finput" id="pDivisi" type="text" placeholder="Divisi" oninput="updateProfilePreview()"/></div>
+                    <div class="field" style="grid-column:1/-1;"><label class="flabel">Bio</label><textarea class="ftextarea" id="pBio" placeholder="Tulis sedikit tentang Anda..." style="min-height:64px;"></textarea></div>
                   </div>
-                  <button class="tbtn tbtn-primary" style="align-self:flex-start;" onclick="ubahEmail()"><i class="ti ti-check"></i> Perbarui Email</button>
+                  <button class="tbtn tbtn-primary" style="align-self:flex-start;" onclick="simpanProfil()"><i class="ti ti-check"></i> Simpan Profil</button>
                 </div>
               </div>
 
-              <!-- Ubah password -->
-              <div class="settings-section">
-                <div class="settings-section-head" onclick="toggleSettingsSection('sectionPw')">
-                  <div style="display:flex;align-items:center;gap:8px;"><i class="ti ti-lock" style="color:var(--teal-500);font-size:16px;"></i><span style="font-size:13px;font-weight:500;">Ubah Password</span></div>
-                  <i class="ti ti-chevron-down settings-chevron" id="chevronPw"></i>
-                </div>
-                <div class="settings-section-body" id="sectionPw">
-                  <div class="field"><label class="flabel">Password saat ini</label>
-                    <div class="inp-icon"><i class="ti ti-lock"></i><input class="finput" id="pwLama" type="password" placeholder="Password saat ini"/><i class="ti ti-eye inp-eye" onclick="togglePw('pwLama',this)"></i></div>
+              <!-- Pengaturan akun -->
+              <div class="card">
+                <div class="card-head"><div class="card-head-left"><i class="ti ti-settings"></i><span>Pengaturan Akun</span></div></div>
+                <div class="card-body">
+                  <div class="settings-section">
+                    <div class="settings-section-head" onclick="toggleSettingsSection('sectionEmail')">
+                      <div style="display:flex;align-items:center;gap:8px;"><i class="ti ti-mail" style="color:var(--teal-500);font-size:16px;"></i><span style="font-size:13px;font-weight:500;">Ubah Email</span></div>
+                      <i class="ti ti-chevron-down settings-chevron" id="chevronEmail"></i>
+                    </div>
+                    <div class="settings-section-body" id="sectionEmail">
+                      <div class="field"><label class="flabel">Email saat ini</label><div class="finput-static" id="emailSaatIni">—</div></div>
+                      <div class="field"><label class="flabel">Email baru</label><input class="finput" id="emailBaru" type="email" placeholder="email-baru@contoh.com"/></div>
+                      <div class="field"><label class="flabel">Konfirmasi dengan password</label>
+                        <div class="inp-icon"><i class="ti ti-lock"></i><input class="finput" id="emailPw" type="password" placeholder="Password Anda"/><i class="ti ti-eye inp-eye" onclick="togglePw('emailPw',this)"></i></div>
+                      </div>
+                      <button class="tbtn tbtn-primary" style="align-self:flex-start;" onclick="ubahEmail()"><i class="ti ti-check"></i> Perbarui Email</button>
+                    </div>
                   </div>
-                  <div class="field"><label class="flabel">Password baru</label>
-                    <div class="inp-icon"><i class="ti ti-lock-check"></i><input class="finput" id="pwBaru" type="password" placeholder="Min. 6 karakter"/><i class="ti ti-eye inp-eye" onclick="togglePw('pwBaru',this)"></i></div>
+                  <div class="settings-section">
+                    <div class="settings-section-head" onclick="toggleSettingsSection('sectionPw')">
+                      <div style="display:flex;align-items:center;gap:8px;"><i class="ti ti-lock" style="color:var(--teal-500);font-size:16px;"></i><span style="font-size:13px;font-weight:500;">Ubah Password</span></div>
+                      <i class="ti ti-chevron-down settings-chevron" id="chevronPw"></i>
+                    </div>
+                    <div class="settings-section-body" id="sectionPw">
+                      <div class="field"><label class="flabel">Password saat ini</label>
+                        <div class="inp-icon"><i class="ti ti-lock"></i><input class="finput" id="pwLama" type="password" placeholder="Password saat ini"/><i class="ti ti-eye inp-eye" onclick="togglePw('pwLama',this)"></i></div>
+                      </div>
+                      <div class="field"><label class="flabel">Password baru</label>
+                        <div class="inp-icon"><i class="ti ti-lock-check"></i><input class="finput" id="pwBaru" type="password" placeholder="Min. 6 karakter"/><i class="ti ti-eye inp-eye" onclick="togglePw('pwBaru',this)"></i></div>
+                      </div>
+                      <div class="field"><label class="flabel">Konfirmasi password baru</label>
+                        <div class="inp-icon"><i class="ti ti-lock-check"></i><input class="finput" id="pwKonfirmasi" type="password" placeholder="Ulangi password baru"/></div>
+                      </div>
+                      <button class="tbtn tbtn-primary" style="align-self:flex-start;" onclick="ubahPassword()"><i class="ti ti-check"></i> Simpan Password</button>
+                    </div>
                   </div>
-                  <div class="field"><label class="flabel">Konfirmasi password baru</label>
-                    <div class="inp-icon"><i class="ti ti-lock-check"></i><input class="finput" id="pwKonfirmasi" type="password" placeholder="Ulangi password baru"/></div>
-                  </div>
-                  <button class="tbtn tbtn-primary" style="align-self:flex-start;" onclick="ubahPassword()"><i class="ti ti-check"></i> Simpan Password</button>
                 </div>
               </div>
 
-            </div>
-          </div>
-
-          <!-- Logout -->
-          <div class="card logout-card" onclick="confirmLogout()">
-            <div style="display:flex;align-items:center;gap:12px;padding:16px 20px;">
-              <div class="logout-icon-wrap"><i class="ti ti-logout"></i></div>
-              <div style="flex:1;">
-                <div style="font-size:14px;font-weight:600;color:#C0392B;">Keluar dari akun</div>
-                <div style="font-size:12px;color:var(--text-3);margin-top:2px;">Sesi Anda akan diakhiri</div>
+              <!-- Kop Surat PDF -->
+              <div class="card" id="kopSuratCard">
+                <div class="card-head"><div class="card-head-left"><i class="ti ti-file-certificate"></i><span>Kop Surat PDF</span></div></div>
+                <div class="card-body">
+                  <div class="kop-preview">
+                    <div class="kop-preview-inner">
+                      <div id="kpLogo" class="kop-preview-logo"></div>
+                      <div class="kop-preview-text">
+                        <div id="kpNama" class="kp-nama">Nama Organisasi</div>
+                        <div id="kpTagline" class="kp-tagline" style="display:none"></div>
+                        <div id="kpInfo" class="kp-info" style="display:none"></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="field-grid">
+                    <div class="field" style="grid-column:1/-1;">
+                      <label class="flabel">Logo Organisasi</label>
+                      <div class="kop-logo-upload">
+                        <div id="kopLogoPreview" class="kop-logo-thumb"></div>
+                        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+                          <input type="file" id="kopLogoFile" accept="image/*" style="display:none" onchange="handleKopLogo(this)"/>
+                          <button class="tbtn" onclick="document.getElementById('kopLogoFile').click()"><i class="ti ti-upload"></i> Upload Logo</button>
+                          <button class="tbtn tbtn-danger" id="kopLogoRemoveBtn" style="display:none;" title="Hapus logo" onclick="removeKopLogo()"><i class="ti ti-trash"></i></button>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="field" style="grid-column:1/-1;"><label class="flabel">Nama Organisasi / Lembaga</label><input class="finput" id="kopNamaOrg" placeholder="Contoh: AILO — Telkom University" oninput="updateKopPreview()"/></div>
+                    <div class="field" style="grid-column:1/-1;"><label class="flabel">Tagline / Subtitle</label><input class="finput" id="kopTagline" placeholder="Contoh: Center of Excellence for AI" oninput="updateKopPreview()"/></div>
+                    <div class="field" style="grid-column:1/-1;"><label class="flabel">Alamat</label><input class="finput" id="kopAlamat" placeholder="Jl. Telekomunikasi No.1, Bandung" oninput="updateKopPreview()"/></div>
+                    <div class="field"><label class="flabel">Telepon</label><input class="finput" id="kopTelepon" placeholder="(022) 7564108" oninput="updateKopPreview()"/></div>
+                    <div class="field"><label class="flabel">Email Kontak</label><input class="finput" id="kopEmail" type="email" placeholder="info@ailo.id" oninput="updateKopPreview()"/></div>
+                    <div class="field"><label class="flabel">Kota (tanda tangan)</label><input class="finput" id="kopKota" placeholder="Bandung" oninput="updateKopPreview()"/></div>
+                  </div>
+                  <button class="tbtn tbtn-primary" style="align-self:flex-start;" onclick="saveKopSettings()"><i class="ti ti-check"></i> Simpan Kop</button>
+                </div>
               </div>
-              <i class="ti ti-chevron-right" style="color:var(--text-3);font-size:16px;"></i>
-            </div>
-          </div>
 
+              <!-- Logout -->
+              <div class="card logout-card" onclick="confirmLogout()">
+                <div style="display:flex;align-items:center;gap:12px;padding:16px 20px;">
+                  <div class="logout-icon-wrap"><i class="ti ti-logout"></i></div>
+                  <div style="flex:1;">
+                    <div style="font-size:14px;font-weight:600;color:#C0392B;">Keluar dari akun</div>
+                    <div style="font-size:12px;color:var(--text-3);margin-top:2px;">Sesi Anda akan diakhiri</div>
+                  </div>
+                  <i class="ti ti-chevron-right" style="color:var(--text-3);font-size:16px;"></i>
+                </div>
+              </div>
+
+            </div><!-- /profile-right -->
+          </div><!-- /profile-layout -->
         </div>
       </div>
 
@@ -559,6 +608,7 @@
 <!-- Mobile FAB — opens penerima panel -->
 <button class="fab-send" id="fabSend" onclick="toggleMobilePanel()"><i class="ti ti-send"></i></button>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

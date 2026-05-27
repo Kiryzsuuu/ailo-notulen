@@ -16,6 +16,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/notulen', require('./routes/notulen'));
 app.use('/api/contacts', require('./routes/contacts'));
+app.use('/api/settings', require('./routes/settings'));
 
 // SPA fallback
 app.get('*', (req, res) => {
