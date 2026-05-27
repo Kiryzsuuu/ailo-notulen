@@ -546,110 +546,105 @@ async function openDetail(id) {
 
 function renderDetail(n) {
   const canEdit = currentUser?.role !== 'executive';
-  const tgl = new Date(n.tanggal).toLocaleDateString('id-ID', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
-  const waktu = [n.waktuMulai, n.waktuSelesai].filter(Boolean).join(' – ') + (n.waktuMulai ? ' WIB' : '');
-  const statusBadge = n.status==='sent'
-    ? '<span class="status-badge badge-sent"><i class="ti ti-circle-check"></i> Terkirim</span>'
-    : '<span class="status-badge badge-draft"><i class="ti ti-file"></i> Draft</span>';
+  const isSent = n.status === 'sent';
+  const fmtDate = (d, opts) => new Date(d).toLocaleDateString('id-ID', opts);
+  const fmtDt  = d => new Date(d).toLocaleString('id-ID',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  const scMap  = { done:['#3B6D11','#EAF3DE','Selesai'], open:['#854F0B','#FAEEDA','Terbuka'] };
 
+  /* ── INFO TABLE ── */
   const infoRows = [
-    ['Tanggal', tgl],
-    waktu ? ['Waktu', waktu] : null,
-    n.lokasi ? ['Lokasi', esc(n.lokasi)] : null,
-    n.pemimpinRapat ? ['Pemimpin', esc(n.pemimpinRapat)] : null,
-    n.notulis ? ['Notulis', esc(n.notulis)] : null,
-    n.divisi ? ['Divisi', esc(n.divisi)] : null,
-  ].filter(Boolean).map(([k,v]) => `<div class="detail-info-row"><span class="detail-info-key">${k}</span><span class="detail-info-val">${v}</span></div>`).join('');
+    n.tanggal      ? ['Tanggal',  fmtDate(n.tanggal,{weekday:'long',year:'numeric',month:'long',day:'numeric'})] : null,
+    n.waktuMulai   ? ['Waktu',    [n.waktuMulai, n.waktuSelesai].filter(Boolean).join(' – ') + ' WIB'] : null,
+    n.lokasi       ? ['Lokasi',   esc(n.lokasi)]       : null,
+    n.pemimpinRapat? ['Pemimpin', esc(n.pemimpinRapat)]: null,
+    n.notulis      ? ['Notulis',  esc(n.notulis)]      : null,
+    n.divisi       ? ['Divisi',   esc(n.divisi)]       : null,
+  ].filter(Boolean).map(([k,v])=>
+    `<tr><td class="dinf-k">${k}</td><td class="dinf-v">${v}</td></tr>`
+  ).join('');
 
-  const agendaHtml = (n.agenda||[]).filter(a=>a.trim()).length
-    ? `<div class="detail-section">
-        <div class="detail-sec-title"><i class="ti ti-list-check"></i> Agenda</div>
-        <ol class="detail-agenda-list">${(n.agenda||[]).filter(a=>a.trim()).map(a=>`<li>${esc(a)}</li>`).join('')}</ol>
-      </div>` : '';
+  /* ── PESERTA ── */
+  const pesertaHtml = (n.peserta||'').trim()
+    ? `<div class="dsec"><p class="dsec-h"><i class="ti ti-users"></i>Peserta Rapat</p>
+        <div class="dchips">${n.peserta.split(',').filter(p=>p.trim()).map(p=>`<span class="dchip">${esc(p.trim())}</span>`).join('')}</div></div>` : '';
 
-  const keputusanHtml = n.keputusan
-    ? `<div class="detail-section">
-        <div class="detail-sec-title"><i class="ti ti-bulb"></i> Keputusan yang Disepakati</div>
-        <div class="detail-text">${esc(n.keputusan).replace(/\n/g,'<br>')}</div>
-      </div>` : '';
+  /* ── AGENDA ── */
+  const agendaItems = (n.agenda||[]).filter(a=>a.trim());
+  const agendaHtml = agendaItems.length
+    ? `<div class="dsec"><p class="dsec-h"><i class="ti ti-list-check"></i>Agenda Pembahasan</p>
+        <div class="dagenda-list">${agendaItems.map((a,i)=>`<div class="dagenda-row"><span class="dagenda-n">${i+1}</span><span>${esc(a)}</span></div>`).join('')}</div></div>` : '';
 
-  const catatanHtml = n.catatan
-    ? `<div class="detail-section">
-        <div class="detail-sec-title"><i class="ti ti-notes"></i> Catatan Tambahan</div>
-        <div class="detail-text detail-text-muted">${esc(n.catatan).replace(/\n/g,'<br>')}</div>
-      </div>` : '';
+  /* ── KEPUTUSAN + CATATAN ── */
+  const keputusanHtml = (n.keputusan||'').trim()
+    ? `<div class="dsec"><p class="dsec-h"><i class="ti ti-bulb"></i>Keputusan yang Disepakati</p>
+        <div class="dblock">${esc(n.keputusan).replace(/\n/g,'<br>')}</div></div>` : '';
+  const catatanHtml = (n.catatan||'').trim()
+    ? `<div class="dsec"><p class="dsec-h"><i class="ti ti-notes"></i>Catatan Tambahan</p>
+        <div class="dblock dblock-muted">${esc(n.catatan).replace(/\n/g,'<br>')}</div></div>` : '';
 
-  const pesertaHtml = n.peserta
-    ? `<div class="detail-section">
-        <div class="detail-sec-title"><i class="ti ti-users"></i> Peserta</div>
-        <div class="detail-peserta-list">${n.peserta.split(',').map(p=>`<span class="detail-peserta-chip">${esc(p.trim())}</span>`).join('')}</div>
-      </div>` : '';
+  const bodySections = [pesertaHtml, agendaHtml, keputusanHtml, catatanHtml].filter(Boolean).join('<hr class="dsep">');
 
-  const scMap = { done: ['#3B6D11','#EAF3DE','Selesai'], open: ['#854F0B','#FAEEDA','Terbuka'] };
-  const actionHtml = (n.actionItems||[]).length
-    ? `<div class="detail-section">
-        <div class="detail-sec-title"><i class="ti ti-checkbox"></i> Tindak Lanjut</div>
-        <div class="detail-table-wrap"><table class="action-table">
-          <thead><tr><th>Tugas</th><th>PIC</th><th>Tenggat</th><th>Status</th></tr></thead>
-          <tbody>${(n.actionItems||[]).map(a => {
-            const tgl = a.tenggat ? new Date(a.tenggat).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}) : '—';
-            const [sc,sb,sl] = scMap[a.status]||scMap.open;
-            return `<tr><td>${esc(a.tugas)}</td><td style="color:var(--teal-500)">${esc(a.pic)}</td><td>${tgl}</td>
-              <td><span style="background:${sb};color:${sc};padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600;">${sl}</span></td></tr>`;
-          }).join('')}</tbody>
-        </table></div>
-      </div>` : '';
+  /* ── TINDAK LANJUT ── */
+  const actionHtml = (n.actionItems||[]).length ? (() => {
+    const rows = n.actionItems.map(a => {
+      const d = a.tenggat ? fmtDate(a.tenggat,{day:'numeric',month:'short',year:'numeric'}) : '—';
+      const [sc,sb,sl] = scMap[a.status]||scMap.open;
+      return `<tr><td>${esc(a.tugas)}</td><td class="dtd-pic">${esc(a.pic)}</td><td>${d}</td>
+        <td><span class="dbadge" style="background:${sb};color:${sc}">${sl}</span></td></tr>`;
+    }).join('');
+    return `<div class="dcard"><div class="dcard-h"><i class="ti ti-checkbox"></i>Tindak Lanjut<span class="dcard-ct">${n.actionItems.length} item</span></div>
+      <div class="dtable-wrap"><table class="dtable">
+        <thead><tr><th>Tugas</th><th>PIC</th><th>Tenggat</th><th>Status</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table></div></div>`;
+  })() : '';
 
-  const penerimaHtml = (n.penerima||[]).length
-    ? `<div class="detail-section">
-        <div class="detail-sec-title"><i class="ti ti-send"></i> Penerima Email</div>
-        <div class="detail-peserta-list">${n.penerima.map(p=>`<span class="detail-peserta-chip"><i class="ti ti-mail" style="font-size:10px;opacity:.6"></i> ${esc(p.nama)} &lt;${esc(p.email)}&gt;</span>`).join('')}</div>
-      </div>` : '';
+  /* ── PENERIMA ── */
+  const penerimaHtml = (n.penerima||[]).length ? (() => {
+    const items = n.penerima.map(p=>
+      `<div class="drecip"><div class="drecip-av">${esc(p.nama).charAt(0).toUpperCase()}</div>
+        <div><div class="drecip-name">${esc(p.nama)}</div><div class="drecip-email">${esc(p.email)}</div></div></div>`
+    ).join('');
+    return `<div class="dcard"><div class="dcard-h"><i class="ti ti-send"></i>Penerima Email<span class="dcard-ct">${n.penerima.length} orang</span></div>
+      <div class="drecip-list">${items}</div></div>`;
+  })() : '';
 
-  const logHtml = (n.log||[]).length
-    ? `<div class="detail-section detail-log-section">
-        <div class="detail-sec-title"><i class="ti ti-history"></i> Log Aktivitas</div>
-        <div class="detail-log">${[...(n.log||[])].reverse().map(l => {
-          const dt = new Date(l.waktu).toLocaleString('id-ID', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
-          return `<div class="log-row">
-            <div class="log-dot"></div>
-            <div class="log-body">
-              <div class="log-aksi">${esc(l.aksi)}</div>
-              <div class="log-meta">${esc(l.oleh?.nama||'—')} · ${dt}</div>
-            </div>
-          </div>`;
-        }).join('')}</div>
-      </div>` : '';
+  /* ── LOG ── */
+  const logHtml = (n.log||[]).length ? (() => {
+    const rows = [...n.log].reverse().map(l =>
+      `<div class="dlog-row"><div class="dlog-dot"></div><div>
+        <div class="dlog-aksi">${esc(l.aksi)}</div>
+        <div class="dlog-meta">${esc(l.oleh?.nama||'—')} · ${fmtDt(l.waktu)}</div>
+      </div></div>`
+    ).join('');
+    return `<div class="dcard"><div class="dcard-h"><i class="ti ti-history"></i>Log Aktivitas</div>
+      <div class="dlog-wrap">${rows}</div></div>`;
+  })() : '';
 
-  const sentInfo = n.sentAt
-    ? `<div style="font-size:11px;color:var(--text-3);margin-top:4px;">Dikirim ${new Date(n.sentAt).toLocaleString('id-ID',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div>` : '';
-
+  /* ── RENDER ── */
   document.getElementById('detailContent').innerHTML = `
-    <div class="detail-header">
-      <button class="tbtn" onclick="showPage('riwayat')"><i class="ti ti-arrow-left"></i> Riwayat</button>
-      <div class="detail-header-actions">
-        ${canEdit ? `<button class="tbtn" onclick="editNotulen('${n._id}')"><i class="ti ti-pencil"></i> Edit</button>` : ''}
-        ${canEdit && n.status!=='sent' ? `<button class="tbtn tbtn-primary" onclick="openDetailSend('${n._id}')"><i class="ti ti-send"></i> Kirim</button>` : ''}
-        ${canEdit ? `<button class="tbtn tbtn-danger" onclick="confirmDeleteNotulen('${n._id}','${esc(n.judul)}')"><i class="ti ti-trash"></i></button>` : ''}
+    <div class="detail-topbar">
+      <button class="tbtn" onclick="showPage('riwayat')"><i class="ti ti-arrow-left"></i><span class="btn-text"> Riwayat</span></button>
+      <div style="display:flex;gap:8px">
+        ${canEdit ? `<button class="tbtn" onclick="editNotulen('${n._id}')"><i class="ti ti-pencil"></i><span class="btn-text"> Edit</span></button>` : ''}
+        ${canEdit && !isSent ? `<button class="tbtn tbtn-primary" onclick="openDetailSend('${n._id}')"><i class="ti ti-send"></i><span class="btn-text"> Kirim</span></button>` : ''}
+        ${canEdit ? `<button class="tbtn tbtn-danger" title="Hapus" onclick="confirmDeleteNotulen('${n._id}','${esc(n.judul)}')"><i class="ti ti-trash"></i></button>` : ''}
       </div>
     </div>
 
-    <div class="detail-title-block">
-      <div class="detail-title">${esc(n.judul)}</div>
-      <div class="detail-title-meta">${statusBadge}${sentInfo}</div>
+    <div class="dcard dmain-card">
+      <div class="dmain-top">
+        ${isSent ? '<span class="dstatus-sent"><i class="ti ti-circle-check"></i> Terkirim</span>' : '<span class="dstatus-draft"><i class="ti ti-file"></i> Draft</span>'}
+        ${n.sentAt ? `<span class="dstatus-time">Dikirim ${fmtDt(n.sentAt)}</span>` : ''}
+      </div>
+      <h1 class="dmain-title">${esc(n.judul)}</h1>
+      <table class="dinf-table"><tbody>${infoRows}</tbody></table>
+      ${bodySections ? `<hr class="dsep">${bodySections}` : ''}
     </div>
 
-    <div class="card">
-      <div class="card-head"><div class="card-head-left"><i class="ti ti-info-circle"></i><span>Informasi Rapat</span></div></div>
-      <div class="detail-info-grid">${infoRows}</div>
-    </div>
-
-    ${pesertaHtml ? `<div class="card"><div class="card-body">${pesertaHtml}</div></div>` : ''}
-    ${agendaHtml ? `<div class="card"><div class="card-body">${agendaHtml}</div></div>` : ''}
-    ${keputusanHtml || catatanHtml ? `<div class="card"><div class="card-body">${keputusanHtml}${catatanHtml}</div></div>` : ''}
-    ${actionHtml ? `<div class="card"><div class="card-body" style="padding:0;">${actionHtml}<div style="height:8px"></div></div></div>` : ''}
-    ${penerimaHtml ? `<div class="card"><div class="card-body">${penerimaHtml}</div></div>` : ''}
-    ${logHtml ? `<div class="card"><div class="card-body">${logHtml}</div></div>` : ''}
+    ${actionHtml}
+    ${penerimaHtml}
+    ${logHtml}
   `;
 }
 
